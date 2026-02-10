@@ -11,12 +11,12 @@ describe('PLATFORM_PRESETS', () => {
   const expectedPlatforms = [
     'twitch', 'youtube', 'facebook', 'tiktok', 'instagram',
     'kick', 'x', 'rumble', 'linkedin', 'trovo', 'bilibili', 'soop',
-    'custom',
+    'mixcloud', 'custom',
   ];
 
-  it('has entries for all 13 platforms', () => {
+  it('has entries for all 14 platforms', () => {
     expect(Object.keys(PLATFORM_PRESETS)).toEqual(expect.arrayContaining(expectedPlatforms));
-    expect(Object.keys(PLATFORM_PRESETS)).toHaveLength(13);
+    expect(Object.keys(PLATFORM_PRESETS)).toHaveLength(14);
   });
 
   it.each(expectedPlatforms)('%s has required fields', (platform) => {
@@ -105,6 +105,13 @@ describe('PLATFORM_PRESETS', () => {
     expect(PLATFORM_PRESETS.soop.requiresRtmps).toBe(false);
     expect(PLATFORM_PRESETS.soop.defaultUrl).toMatch(/^rtmp:\/\//);
     expect(PLATFORM_PRESETS.soop.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
+  });
+
+  it('mixcloud has correct defaults', () => {
+    expect(PLATFORM_PRESETS.mixcloud.name).toBe('Mixcloud');
+    expect(PLATFORM_PRESETS.mixcloud.requiresRtmps).toBe(false);
+    expect(PLATFORM_PRESETS.mixcloud.defaultUrl).toBe('rtmp://rtmp.mixcloud.com/broadcast');
+    expect(PLATFORM_PRESETS.mixcloud.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 
   it('custom has empty default URL', () => {

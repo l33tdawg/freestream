@@ -17,6 +17,7 @@ const platforms: { platform: PlatformId; color: string }[] = [
   { platform: 'trovo', color: 'rgb(25, 214, 107)' },
   { platform: 'bilibili', color: 'rgb(0, 161, 214)' },
   { platform: 'soop', color: 'rgb(106, 69, 255)' },
+  { platform: 'mixcloud', color: 'rgb(80, 0, 255)' },
   { platform: 'custom', color: 'rgb(107, 114, 128)' },
 ];
 
@@ -102,8 +103,8 @@ describe('PlatformIcon', () => {
     expect(svg?.getAttribute('fill')).toBe('currentColor');
   });
 
-  it('renders all 13 platforms', () => {
-    expect(platforms).toHaveLength(13);
+  it('renders all 14 platforms', () => {
+    expect(platforms).toHaveLength(14);
     for (const { platform } of platforms) {
       const { container } = render(<PlatformIcon platform={platform} />);
       const svg = container.querySelector('svg');

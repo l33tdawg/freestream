@@ -11,6 +11,7 @@ export type PlatformId =
   | 'trovo'
   | 'bilibili'
   | 'soop'
+  | 'mixcloud'
   | 'custom';
 
 export interface PlatformPreset {

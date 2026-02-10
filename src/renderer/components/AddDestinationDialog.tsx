@@ -37,8 +37,8 @@ const platformGuides: Record<PlatformId, PlatformGuide> = {
   },
   tiktok: {
     steps: 'Open TikTok LIVE Studio or go to LIVE Center on desktop. Copy the Server URL and Stream Key provided.',
-    link: 'https://www.tiktok.com/studio',
-    linkLabel: 'Open TikTok Studio',
+    link: 'https://www.tiktok.com/studio/download',
+    linkLabel: 'Download TikTok LIVE Studio',
     warning: 'Requires LIVE access (typically 1,000+ followers)',
     note: 'TikTok provides a unique server URL per session — you\'ll need to update it each time.',
   },
@@ -92,6 +92,12 @@ const platformGuides: Record<PlatformId, PlatformGuide> = {
     link: 'https://www.sooplive.co.kr',
     linkLabel: 'Open SOOP',
     note: 'Formerly AfreecaTV. Regional servers available (Korea, US, UK, Singapore, Brazil).',
+  },
+  mixcloud: {
+    steps: 'Go to Mixcloud Live → create a new live stream. Copy the Server URL and Stream Key provided.',
+    link: 'https://www.mixcloud.com/live/new',
+    linkLabel: 'Start a Mixcloud Live',
+    note: 'Popular with DJs. Stream key is reusable. Your stream URL is mixcloud.com/live/[username].',
   },
   custom: {
     steps: 'Enter your custom RTMP or RTMPS server URL and stream key. Works with any RTMP-compatible service.',

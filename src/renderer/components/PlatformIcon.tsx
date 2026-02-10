@@ -86,6 +86,13 @@ const SoopIcon: React.FC<{ size: number }> = ({ size }) => (
   </svg>
 );
 
+// Mixcloud - headphones icon for DJ platform
+const MixcloudIcon: React.FC<{ size: number }> = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.76 11.045c-.453-4.863-4.56-8.67-9.51-8.67-4.073 0-7.556 2.553-8.935 6.145C.97 9.27 0 10.79 0 12.545c0 2.32 1.66 4.255 3.862 4.695.34.068.69.105 1.047.105H9.75v-1.5H4.91c-.255 0-.502-.024-.742-.072C2.59 15.44 1.5 14.115 1.5 12.545c0-1.275.742-2.378 1.82-2.896l.578-.278.155-.63C5.14 5.34 8.005 3.375 11.25 3.375c4.275 0 7.8 3.24 8.22 7.41l.068.69.69.067c1.65.16 2.897 1.485 2.897 3.003 0 1.562-1.177 2.854-2.7 3.03l-.175.018H15v1.5h5.25l.305-.032c2.34-.27 4.07-2.23 4.07-4.516 0-2.19-1.598-4.075-3.705-4.5zM12 12.75a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5zm0 1.5a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5zm0 .75a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" />
+  </svg>
+);
+
 const CustomIcon: React.FC<{ size: number }> = ({ size }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
@@ -106,6 +113,7 @@ const iconMap: Record<PlatformId, React.FC<{ size: number }>> = {
   trovo: TrovoIcon,
   bilibili: BilibiliIcon,
   soop: SoopIcon,
+  mixcloud: MixcloudIcon,
   custom: CustomIcon,
 };
 
@@ -122,6 +130,7 @@ const colorMap: Record<PlatformId, string> = {
   trovo: '#19D66B',
   bilibili: '#00A1D6',
   soop: '#6A45FF',
+  mixcloud: '#5000FF',
   custom: '#6B7280',
 };
 

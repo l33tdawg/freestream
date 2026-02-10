@@ -97,6 +97,14 @@ export const PLATFORM_PRESETS: Record<string, PlatformPreset> = {
     color: '#6A45FF',
     icon: '🟣',
   },
+  mixcloud: {
+    id: 'mixcloud',
+    name: 'Mixcloud',
+    defaultUrl: 'rtmp://rtmp.mixcloud.com/broadcast',
+    requiresRtmps: false,
+    color: '#5000FF',
+    icon: '🎧',
+  },
   custom: {
     id: 'custom',
     name: 'Custom RTMP',
