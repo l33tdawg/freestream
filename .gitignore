@@ -5,4 +5,5 @@ release/
 .DS_Store
 .env
 .claude/settings.local.json
+CLAUDE.md
 test-results/
