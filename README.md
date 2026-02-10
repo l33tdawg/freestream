@@ -21,14 +21,14 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
 
 ## Features
 
-- **Multi-platform streaming** — Twitch, YouTube, Facebook, TikTok, Instagram, Kick, X, Rumble, LinkedIn, Trovo, Bilibili, Soop, and custom RTMP
+- **Multi-platform streaming** — Twitch, YouTube, Facebook, TikTok, Instagram, Kick, X, Rumble, LinkedIn, Trovo, Bilibili, Soop, Mixcloud, and custom RTMP
 - **No cloud middleman** — streams go directly from your machine to each platform
 - **Secure key storage** — stream keys are stored in your OS keychain (macOS Keychain / Windows Credential Vault / Linux Secret Service), never in plain text
 - **Per-destination controls** — start, stop, and monitor each destination independently
 - **Real-time health monitoring** — bitrate, FPS, uptime, and dropped frames per destination
 - **Auto-reconnect** — configurable retry logic if a destination drops
 - **Cross-platform** — macOS (DMG), Windows (NSIS installer), Linux (AppImage)
-- **Stream preview** — live preview of your ingest stream right in the app
+- **Stream preview with volume controls** — live preview of your ingest stream with adjustable monitoring volume and mute toggle
 - **Dark theme** — easy on the eyes during long streams
 
 ## Prerequisites
@@ -41,14 +41,14 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
 
 ## Download
 
-Grab the latest v1.0.0 release for your platform. macOS builds are code-signed and notarized by Apple.
+Grab the latest release for your platform. macOS builds are code-signed and notarized by Apple.
 
 | Platform | Download |
 |----------|----------|
-| macOS (Apple Silicon) | [FreEstream-1.0.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0-arm64.dmg) |
-| macOS (Intel) | [FreEstream-1.0.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0.dmg) |
-| Windows (x64) | [FreEstream Setup 1.0.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream.Setup.1.0.0.exe) |
-| Linux (x64) | [FreEstream-1.0.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0.AppImage) |
+| macOS (Apple Silicon) | [FreEstream-1.1.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0-arm64.dmg) |
+| macOS (Intel) | [FreEstream-1.1.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0.dmg) |
+| Windows (x64) | [FreEstream Setup 1.1.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream.Setup.1.1.0.exe) |
+| Linux (x64) | [FreEstream-1.1.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0.AppImage) |
 
 Or browse all releases on the [Releases](https://github.com/l33tdawg/freestream/releases) page.
 
