@@ -22,6 +22,11 @@ export class StreamMonitor extends EventEmitter {
       this.emit('ingestStatusChanged', { connected: false } as IngestStatus);
     });
 
+    // Forward NMS stats updates (bitrate, fps, resolution, etc.)
+    this.nms.on('ingestStatsUpdated', (status: IngestStatus) => {
+      this.emit('ingestStatusChanged', status);
+    });
+
     // Forward FFmpeg status events
     this.ffmpegManager.on('statusChanged', (status: DestinationStatus) => {
       this.emit('destinationStatusChanged', status);

@@ -1,6 +1,24 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock mpegts.js for StreamPreview component
+vi.mock('mpegts.js', () => ({
+  default: {
+    isSupported: () => false,
+    Events: { ERROR: 'error' },
+    createPlayer: () => ({
+      attachMediaElement: vi.fn(),
+      load: vi.fn(),
+      play: vi.fn(),
+      pause: vi.fn(),
+      unload: vi.fn(),
+      detachMediaElement: vi.fn(),
+      destroy: vi.fn(),
+      on: vi.fn(),
+    }),
+  },
+}));
+
 const mockFreestream = {
   // Destinations
   getDestinations: vi.fn(),
@@ -29,6 +47,7 @@ const mockFreestream = {
 
   // App
   getIngestUrl: vi.fn(),
+  getIngestStreamKey: vi.fn(),
   getPlatformPresets: vi.fn(),
 
   // Event listeners

@@ -74,6 +74,8 @@ export function registerIpcHandlers(
     }
 
     try {
+      // Use the actual RTMP path OBS is publishing to
+      ffmpegManager.setIngestUrl(nms.getIngestUrl());
       await ffmpegManager.startAll(destinations);
       streamMonitor.startPolling();
       return { success: true };
@@ -118,11 +120,24 @@ export function registerIpcHandlers(
 
   // --- App ---
   ipcMain.handle(IPC.GET_INGEST_URL, () => {
-    return nms.getIngestUrl();
+    return nms.getIngestServerUrl();
+  });
+
+  ipcMain.handle('app:get-ingest-stream-key', () => {
+    return nms.getIngestStreamKey();
+  });
+
+  ipcMain.handle('app:get-network-ingest-url', () => {
+    return nms.getNetworkIngestUrl();
   });
 
   ipcMain.handle('app:get-platform-presets', () => {
     return PLATFORM_PRESETS;
+  });
+
+  // --- Stream key verification ---
+  ipcMain.handle('stream:test-connection', async (_event, url: string, streamKey: string) => {
+    return ffmpegManager.testConnection(url, streamKey);
   });
 
   // --- Forward events to renderer ---

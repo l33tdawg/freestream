@@ -41,7 +41,7 @@ export default function DestinationCard({ destination, preset, status, onToggle,
       }`}
       style={isLive ? {
         borderColor: `${platformColor}33`,
-        boxShadow: `0 2px 16px ${platformColor}18, inset 0 1px 0 rgba(255,255,255,0.05)`,
+        boxShadow: `0 2px 16px ${platformColor}18, inset 0 1px 0 var(--color-highlight-inset)`,
       } : undefined}
     >
       {/* Platform icon */}
@@ -68,22 +68,22 @@ export default function DestinationCard({ destination, preset, status, onToggle,
         <div className="flex items-center gap-2.5 mt-1">
           {status?.bitrate != null && status.bitrate > 0 ? (
             <>
-              <span className="text-[11px] text-gray-500 font-mono tabular-nums">{formatBitrate(status.bitrate)}</span>
+              <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatBitrate(status.bitrate)}</span>
               {status?.fps != null && status.fps > 0 && (
                 <>
-                  <span className="text-gray-700">|</span>
-                  <span className="text-[11px] text-gray-500 font-mono tabular-nums">{status.fps} fps</span>
+                  <span style={{ color: 'var(--color-text-faint)' }}>|</span>
+                  <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{status.fps} fps</span>
                 </>
               )}
               {status?.uptime != null && status.uptime > 0 && (
                 <>
-                  <span className="text-gray-700">|</span>
-                  <span className="text-[11px] text-gray-500 font-mono tabular-nums">{formatUptime(status.uptime)}</span>
+                  <span style={{ color: 'var(--color-text-faint)' }}>|</span>
+                  <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatUptime(status.uptime)}</span>
                 </>
               )}
             </>
           ) : (
-            <span className="text-[11px] text-gray-600 truncate">{destination.url || 'No URL configured'}</span>
+            <span className="text-[11px] truncate" style={{ color: 'var(--color-text-muted)' }}>{destination.url || 'No URL configured'}</span>
           )}
         </div>
         {status?.error && (
@@ -114,10 +114,10 @@ export default function DestinationCard({ destination, preset, status, onToggle,
         <Tooltip content="Edit destination" position="top">
           <button
             onClick={onEdit}
-            className="p-2 rounded-xl transition-all duration-150 text-gray-600 hover:text-gray-300"
-            style={{ background: 'transparent' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-sidebar-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            className="p-2 rounded-xl transition-all duration-150"
+            style={{ background: 'transparent', color: 'var(--color-text-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-sidebar-hover)'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
           >
             <svg className="w-[15px] h-[15px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
@@ -129,8 +129,8 @@ export default function DestinationCard({ destination, preset, status, onToggle,
         <Tooltip content="Remove destination" position="top">
           <button
             onClick={onRemove}
-            className="p-2 rounded-xl transition-all duration-150 text-gray-600 hover:text-red-400"
-            style={{ background: 'transparent' }}
+            className="p-2 rounded-xl transition-all duration-150 hover:text-red-400"
+            style={{ color: 'var(--color-text-muted)', background: 'transparent' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(248,113,113,0.08)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >

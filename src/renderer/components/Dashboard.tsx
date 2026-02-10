@@ -96,7 +96,7 @@ export default function Dashboard({ ingest, isLive, destinationStatuses, destina
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-6 pb-6">
-        <div className="max-w-2xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-4">
           {/* Ingest */}
           <IngestStatus status={ingest} />
 

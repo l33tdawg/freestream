@@ -19,10 +19,10 @@ function createWindow(): BrowserWindow {
   nativeTheme.themeSource = 'dark';
 
   const win = new BrowserWindow({
-    width: 1120,
-    height: 760,
-    minWidth: 940,
-    minHeight: 640,
+    width: 1280,
+    height: 880,
+    minWidth: 1000,
+    minHeight: 720,
     title: APP_NAME,
     backgroundColor: '#0d0d1a',
     vibrancy: 'under-window',
@@ -104,7 +104,7 @@ async function initializeServices(): Promise<void> {
   nms = new NMSWrapper(settings.rtmpPort);
   nms.start();
 
-  ffmpegManager = new FFmpegManager(nms.getIngestUrl());
+  ffmpegManager = new FFmpegManager();
   const ffmpegPath = await ffmpegManager.initialize();
   if (!ffmpegPath) {
     console.warn('[FreEstream] FFmpeg not found. Fan-out will not work until FFmpeg is installed.');

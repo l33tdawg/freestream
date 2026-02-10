@@ -51,6 +51,11 @@ export interface IngestStatus {
   bitrate?: number;
   fps?: number;
   resolution?: string;
+  audioCodec?: string;
+  audioChannels?: number;
+  sampleRate?: number;
+  uptime?: number;
+  previewUrl?: string;
 }
 
 export interface AppSettings {

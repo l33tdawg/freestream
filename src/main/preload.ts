@@ -52,7 +52,13 @@ const api = {
 
   // App
   getIngestUrl: () => ipcRenderer.invoke(IPC.GET_INGEST_URL),
+  getIngestStreamKey: () => ipcRenderer.invoke('app:get-ingest-stream-key'),
+  getNetworkIngestUrl: () => ipcRenderer.invoke('app:get-network-ingest-url'),
   getPlatformPresets: () => ipcRenderer.invoke('app:get-platform-presets'),
+
+  // Stream key verification
+  testConnection: (url: string, streamKey: string) =>
+    ipcRenderer.invoke('stream:test-connection', url, streamKey),
 
   // Event listeners
   onIngestStatusChanged: (callback: (status: any) => void) => {

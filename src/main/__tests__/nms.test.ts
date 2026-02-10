@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock NodeMediaServer
 const mockNmsInstance = {
@@ -15,6 +15,22 @@ vi.mock('node-media-server', () => {
   return { default: MockNMS };
 });
 
+// Mock http module to prevent real HTTP requests from stats polling
+vi.mock('http', () => ({
+  default: {
+    get: vi.fn().mockReturnValue({
+      on: vi.fn().mockReturnThis(),
+      setTimeout: vi.fn(),
+      destroy: vi.fn(),
+    }),
+  },
+  get: vi.fn().mockReturnValue({
+    on: vi.fn().mockReturnThis(),
+    setTimeout: vi.fn(),
+    destroy: vi.fn(),
+  }),
+}));
+
 import { NMSWrapper } from '../nms';
 
 describe('NMSWrapper', () => {
@@ -22,9 +38,15 @@ describe('NMSWrapper', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
     // Reset on to store handlers
     mockNmsInstance.on.mockImplementation(() => {});
     nms = new NMSWrapper(1935);
+  });
+
+  afterEach(() => {
+    nms.stop();
+    vi.useRealTimers();
   });
 
   describe('start', () => {
@@ -42,7 +64,7 @@ describe('NMSWrapper', () => {
       expect(registeredEvents).toContain('donePublish');
     });
 
-    it('emits ingestConnected when our stream publishes', () => {
+    it('emits ingestConnected when a stream publishes', () => {
       const handler = vi.fn();
       nms.on('ingestConnected', handler);
 
@@ -68,7 +90,7 @@ describe('NMSWrapper', () => {
       );
     });
 
-    it('emits ingestDisconnected when our stream ends', () => {
+    it('emits ingestDisconnected when the stream ends', () => {
       const handler = vi.fn();
       nms.on('ingestDisconnected', handler);
 
@@ -84,7 +106,7 @@ describe('NMSWrapper', () => {
       expect(handler).toHaveBeenCalled();
     });
 
-    it('does not emit events for other streams', () => {
+    it('emits ingestConnected for any stream path', () => {
       const handler = vi.fn();
       nms.on('ingestConnected', handler);
 
@@ -94,10 +116,13 @@ describe('NMSWrapper', () => {
         (c: any[]) => c[0] === 'prePublish',
       );
       const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
 
       prePublishHandler('session-1', '/other/path', {});
 
-      expect(handler).not.toHaveBeenCalled();
+      expect(handler).toHaveBeenCalledWith(
+        expect.objectContaining({ connected: true }),
+      );
     });
   });
 
@@ -146,7 +171,7 @@ describe('NMSWrapper', () => {
     });
   });
 
-  describe('isOurStream (via prePublish behavior)', () => {
+  describe('stream path handling', () => {
     it('accepts /live/stream path', () => {
       const handler = vi.fn();
       nms.on('ingestConnected', handler);
@@ -163,7 +188,7 @@ describe('NMSWrapper', () => {
       expect(handler).toHaveBeenCalled();
     });
 
-    it('rejects /live/other path', () => {
+    it('accepts any stream key under /live/ app', () => {
       const handler = vi.fn();
       nms.on('ingestConnected', handler);
 
@@ -173,24 +198,64 @@ describe('NMSWrapper', () => {
         (c: any[]) => c[0] === 'prePublish',
       );
       const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
 
-      prePublishHandler('session-1', '/live/other', {});
-      expect(handler).not.toHaveBeenCalled();
+      prePublishHandler('session-1', '/live/customkey', {});
+      expect(handler).toHaveBeenCalled();
     });
 
-    it('rejects /other/stream path', () => {
-      const handler = vi.fn();
-      nms.on('ingestConnected', handler);
-
+    it('uses actual stream path for ingest URL when connected', () => {
       nms.start();
 
       const prePublishCall = mockNmsInstance.on.mock.calls.find(
         (c: any[]) => c[0] === 'prePublish',
       );
       const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
 
-      prePublishHandler('session-1', '/other/stream', {});
-      expect(handler).not.toHaveBeenCalled();
+      prePublishHandler('session-1', '/live/customkey', {});
+      expect(nms.getIngestUrl()).toBe('rtmp://localhost:1935/live/customkey');
+    });
+  });
+
+  describe('getIngestServerUrl', () => {
+    it('returns server URL without stream key', () => {
+      expect(nms.getIngestServerUrl()).toBe('rtmp://localhost:1935/live');
+    });
+
+    it('uses the configured port', () => {
+      const customNms = new NMSWrapper(2935);
+      expect(customNms.getIngestServerUrl()).toBe('rtmp://localhost:2935/live');
+    });
+  });
+
+  describe('getIngestStreamKey', () => {
+    it('returns the stream key', () => {
+      expect(nms.getIngestStreamKey()).toBe('stream');
+    });
+  });
+
+  describe('getHttpFlvUrl', () => {
+    it('returns HTTP-FLV URL with default path', () => {
+      expect(nms.getHttpFlvUrl()).toBe('http://localhost:9935/live/stream.flv');
+    });
+
+    it('uses actual stream path when connected', () => {
+      nms.start();
+
+      const prePublishCall = mockNmsInstance.on.mock.calls.find(
+        (c: any[]) => c[0] === 'prePublish',
+      );
+      const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
+
+      prePublishHandler('session-1', '/live/mykey', {});
+      expect(nms.getHttpFlvUrl()).toBe('http://localhost:9935/live/mykey.flv');
+    });
+
+    it('uses the configured port offset', () => {
+      const customNms = new NMSWrapper(2935);
+      expect(customNms.getHttpFlvUrl()).toBe('http://localhost:10935/live/stream.flv');
     });
   });
 
@@ -204,6 +269,59 @@ describe('NMSWrapper', () => {
       const status2 = nms.ingestStatus;
       expect(status1).toEqual(status2);
       expect(status1).not.toBe(status2);
+    });
+
+    it('includes previewUrl when connected', () => {
+      nms.start();
+
+      const prePublishCall = mockNmsInstance.on.mock.calls.find(
+        (c: any[]) => c[0] === 'prePublish',
+      );
+      const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
+
+      prePublishHandler('session-1', '/live/stream', {});
+
+      expect(nms.ingestStatus.previewUrl).toBe('http://localhost:9935/live/stream.flv');
+    });
+  });
+
+  describe('stats polling', () => {
+    it('starts polling after prePublish', () => {
+      nms.start();
+
+      const prePublishCall = mockNmsInstance.on.mock.calls.find(
+        (c: any[]) => c[0] === 'prePublish',
+      );
+      const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
+
+      prePublishHandler('session-1', '/live/stream', {});
+
+      // Stats polling starts after 1500ms delay
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+    });
+
+    it('stops polling on donePublish', () => {
+      nms.start();
+
+      const prePublishCall = mockNmsInstance.on.mock.calls.find(
+        (c: any[]) => c[0] === 'prePublish',
+      );
+      const prePublishHandler = prePublishCall[1];
+      mockNmsInstance.getSession.mockReturnValue({ ip: '127.0.0.1' });
+
+      prePublishHandler('session-1', '/live/stream', {});
+
+      const donePublishCall = mockNmsInstance.on.mock.calls.find(
+        (c: any[]) => c[0] === 'donePublish',
+      );
+      const donePublishHandler = donePublishCall[1];
+
+      donePublishHandler('session-1', '/live/stream', {});
+
+      // After donePublish, timers should be cleared (only the initial setTimeout may remain if not yet fired)
+      expect(nms.ingestStatus.connected).toBe(false);
     });
   });
 });

@@ -50,6 +50,8 @@
     --color-platform-unselected-border: rgba(255, 255, 255, 0.05);
     --color-ingest-box-bg: rgba(255, 255, 255, 0.03);
     --color-ingest-box-border: rgba(255, 255, 255, 0.05);
+    --color-highlight-inset: rgba(255, 255, 255, 0.05);
+    --color-meter-segment-off: rgba(255, 255, 255, 0.06);
   }
 
   :root.light {
@@ -90,14 +92,16 @@
     --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
     --color-selection-bg: rgba(233, 69, 96, 0.2);
     --color-selection-text: #111827;
-    --color-tooltip-bg: rgba(13, 13, 26, 0.95);
-    --color-tooltip-border: rgba(255, 255, 255, 0.1);
+    --color-tooltip-bg: rgba(30, 30, 50, 0.95);
+    --color-tooltip-border: rgba(0, 0, 0, 0.08);
     --color-disabled-bg: rgba(0, 0, 0, 0.04);
     --color-disabled-text: rgba(0, 0, 0, 0.25);
     --color-platform-unselected-bg: rgba(0, 0, 0, 0.02);
     --color-platform-unselected-border: rgba(0, 0, 0, 0.06);
     --color-ingest-box-bg: rgba(0, 0, 0, 0.02);
     --color-ingest-box-border: rgba(0, 0, 0, 0.06);
+    --color-highlight-inset: rgba(0, 0, 0, 0.04);
+    --color-meter-segment-off: rgba(0, 0, 0, 0.06);
   }
 
   * {
@@ -227,6 +231,19 @@
   /* Card */
   .card {
     @apply glass rounded-2xl p-4;
+  }
+
+  /* Stream button */
+  .stream-btn {
+    @apply transition-all duration-200;
+  }
+  .stream-btn:hover:not(:disabled) {
+    transform: translateY(-0.5px);
+    filter: brightness(1.1);
+  }
+  .stream-btn:active:not(:disabled) {
+    transform: translateY(0.5px);
+    filter: brightness(0.95);
   }
 
   /* Toggle switch */

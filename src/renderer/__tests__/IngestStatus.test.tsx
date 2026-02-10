@@ -6,6 +6,7 @@ import type { IngestStatus as IngestStatusType } from '../../shared/types';
 beforeEach(() => {
   vi.clearAllMocks();
   (window.freestream.getIngestUrl as ReturnType<typeof vi.fn>).mockResolvedValue('rtmp://localhost:1935/live');
+  (window.freestream.getIngestStreamKey as ReturnType<typeof vi.fn>).mockResolvedValue('stream');
 });
 
 describe('IngestStatus', () => {
@@ -23,7 +24,7 @@ describe('IngestStatus', () => {
     render(<IngestStatus status={status} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Set OBS to stream to this URL/i)).toBeInTheDocument();
+      expect(screen.getByText(/In OBS, set the/i)).toBeInTheDocument();
     });
   });
 
@@ -53,7 +54,7 @@ describe('IngestStatus', () => {
       expect(screen.getByText('OBS Connected')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText(/Set OBS to stream to this URL/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/In OBS, set the/i)).not.toBeInTheDocument();
   });
 
   it('displays the ingest URL', async () => {

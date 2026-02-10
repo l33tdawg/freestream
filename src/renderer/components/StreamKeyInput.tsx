@@ -23,8 +23,8 @@ export default function StreamKeyInput({ value, onChange, placeholder = 'Enter s
       <button
         type="button"
         onClick={() => setVisible(!visible)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] px-2.5 py-1 rounded-lg text-gray-500 hover:text-gray-300 transition-colors font-medium"
-        style={{ background: 'rgba(255,255,255,0.05)' }}
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] px-2.5 py-1 rounded-lg transition-colors font-medium"
+        style={{ background: 'var(--color-copy-btn-bg)', color: 'var(--color-text-muted)' }}
       >
         {visible ? 'Hide' : 'Show'}
       </button>

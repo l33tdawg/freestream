@@ -54,7 +54,8 @@ describe('FFmpegManager', () => {
     mockProc.on = vi.fn();
     mockProc.kill = vi.fn();
 
-    manager = new FFmpegManager(ingestUrl);
+    manager = new FFmpegManager();
+    manager.setIngestUrl(ingestUrl);
   });
 
   afterEach(() => {

@@ -49,13 +49,13 @@ export default function SettingsDialog({ open, onClose }: Props) {
       <div className="modal-content max-w-lg" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 pt-6 pb-4">
           <h2 className="text-[17px] font-semibold" style={{ color: 'var(--color-text-primary)' }}>Settings</h2>
-          <p className="text-[12px] text-gray-500 mt-1">Configure your FreEstream preferences</p>
+          <p className="text-[12px] mt-1" style={{ color: 'var(--color-text-muted)' }}>Configure your FreEstream preferences</p>
         </div>
 
         <div className="px-6 pb-6 space-y-5">
           {/* RTMP Port */}
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">RTMP Ingest Port</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>RTMP Ingest Port</label>
             <input
               type="number"
               value={settings.rtmpPort}
@@ -64,12 +64,12 @@ export default function SettingsDialog({ open, onClose }: Props) {
               min={1024}
               max={65535}
             />
-            <p className="text-[11px] text-gray-600 mt-1.5">Restart required after changing</p>
+            <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-text-muted)' }}>Restart required after changing</p>
           </div>
 
           {/* FFmpeg */}
           <div>
-            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">FFmpeg Path</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>FFmpeg Path</label>
             <input
               type="text"
               value={settings.ffmpegPath}
@@ -90,14 +90,14 @@ export default function SettingsDialog({ open, onClose }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Auto Reconnect</p>
-                <p className="text-[11px] text-gray-600 mt-0.5">Retry failed destinations automatically</p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Retry failed destinations automatically</p>
               </div>
               <ToggleSwitch checked={settings.autoReconnect} onChange={() => update('autoReconnect', !settings.autoReconnect)} />
             </div>
 
             {settings.autoReconnect && (
               <div className="mt-4 animate-fade-in">
-                <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-widest mb-1.5">Max Retries</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Max Retries</label>
                 <input
                   type="number"
                   value={settings.maxRetries}
@@ -114,7 +114,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Appearance</p>
-              <p className="text-[11px] text-gray-600 mt-0.5">Switch between dark and light mode</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Switch between dark and light mode</p>
             </div>
             <ToggleSwitch checked={isDark} onChange={toggleTheme} />
           </div>
@@ -123,7 +123,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Minimize to Tray</p>
-              <p className="text-[11px] text-gray-600 mt-0.5">Keep running when window is closed</p>
+              <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Keep running when window is closed</p>
             </div>
             <ToggleSwitch checked={settings.minimizeToTray} onChange={() => update('minimizeToTray', !settings.minimizeToTray)} />
           </div>

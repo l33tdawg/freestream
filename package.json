@@ -25,6 +25,7 @@
   "dependencies": {
     "electron-store": "^8.1.0",
     "keytar": "^7.9.0",
+    "mpegts.js": "^1.8.0",
     "node-media-server": "^2.6.4",
     "uuid": "^9.0.0"
   },

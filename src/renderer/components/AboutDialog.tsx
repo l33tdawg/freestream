@@ -45,7 +45,7 @@ export default function AboutDialog({ isOpen, onClose }: Props) {
           </p>
 
           {/* Description */}
-          <p className="mt-2 text-[12px] text-gray-500 leading-relaxed max-w-[280px]">
+          <p className="mt-2 text-[12px] leading-relaxed max-w-[280px]" style={{ color: 'var(--color-text-muted)' }}>
             Fan out a single RTMP ingest to multiple streaming platforms simultaneously.
             No subscriptions, no limits, completely free.
           </p>
@@ -57,7 +57,7 @@ export default function AboutDialog({ isOpen, onClose }: Props) {
           />
 
           {/* Built by */}
-          <p className="text-[11px] text-gray-500 uppercase tracking-widest font-semibold">
+          <p className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text-muted)' }}>
             Built by
           </p>
           <p
@@ -95,7 +95,7 @@ export default function AboutDialog({ isOpen, onClose }: Props) {
           />
 
           {/* Footer text */}
-          <p className="text-[11px] text-gray-600 italic">
+          <p className="text-[11px] italic" style={{ color: 'var(--color-text-muted)' }}>
             Made with love for the streaming community
           </p>
 

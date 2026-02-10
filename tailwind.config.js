@@ -10,10 +10,10 @@ export default {
       },
       colors: {
         surface: {
-          DEFAULT: '#0d0d1a',
-          light: 'rgba(255, 255, 255, 0.04)',
-          lighter: 'rgba(255, 255, 255, 0.08)',
-          hover: 'rgba(255, 255, 255, 0.12)',
+          DEFAULT: 'var(--color-surface)',
+          light: 'var(--color-glass-bg)',
+          lighter: 'var(--color-glass-bg-hover)',
+          hover: 'var(--color-sidebar-hover)',
         },
         accent: {
           DEFAULT: '#e94560',

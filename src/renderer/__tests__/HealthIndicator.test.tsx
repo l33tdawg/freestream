@@ -5,7 +5,7 @@ import type { DestinationHealth } from '../../shared/types';
 
 describe('HealthIndicator', () => {
   const healthStates: { health: DestinationHealth; label: string; colorClass: string; pulse: boolean }[] = [
-    { health: 'idle', label: 'Idle', colorClass: 'bg-gray-500', pulse: false },
+    { health: 'idle', label: 'Idle', colorClass: '', pulse: false },
     { health: 'connecting', label: 'Connecting', colorClass: 'bg-yellow-400', pulse: true },
     { health: 'live', label: 'Live', colorClass: 'bg-success', pulse: false },
     { health: 'error', label: 'Error', colorClass: 'bg-red-400', pulse: false },

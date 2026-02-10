@@ -17,12 +17,15 @@ interface FFmpegInstance {
 export class FFmpegManager extends EventEmitter {
   private instances: Map<string, FFmpegInstance> = new Map();
   private ffmpegPath: string = 'ffmpeg';
-  private ingestUrl: string;
+  private ingestUrl: string = '';
   private running: boolean = false;
 
-  constructor(ingestUrl: string) {
+  constructor() {
     super();
-    this.ingestUrl = ingestUrl;
+  }
+
+  setIngestUrl(url: string): void {
+    this.ingestUrl = url;
   }
 
   async initialize(): Promise<string | null> {
@@ -32,6 +35,86 @@ export class FFmpegManager extends EventEmitter {
       this.ffmpegPath = detected;
     }
     return detected;
+  }
+
+  /** Test a stream key by attempting a short FFmpeg connection */
+  async testConnection(url: string, streamKey: string): Promise<{ success: boolean; error?: string }> {
+    const fullUrl = url + streamKey;
+
+    return new Promise((resolve) => {
+      const args = [
+        '-f', 'lavfi', '-i', 'color=black:s=160x90:r=1',
+        '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=mono',
+        '-t', '3',
+        '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-b:v', '100k',
+        '-c:a', 'aac', '-ar', '44100',
+        '-f', 'flv',
+        fullUrl,
+      ];
+
+      let stderr = '';
+      let resolved = false;
+      let gotFrames = false;
+
+      const proc = spawn(this.ffmpegPath, args, {
+        stdio: ['ignore', 'ignore', 'pipe'],
+      });
+
+      const timeout = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          proc.kill('SIGKILL');
+          // If we got this far without error, connection is working
+          resolve({ success: true });
+        }
+      }, 8000);
+
+      proc.stderr?.on('data', (data: Buffer) => {
+        const line = data.toString();
+        stderr += line;
+        // If FFmpeg is outputting frame stats, the connection is live
+        if (/frame=\s*\d+/.test(line)) {
+          gotFrames = true;
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timeout);
+            proc.kill('SIGTERM');
+            resolve({ success: true });
+          }
+        }
+      });
+
+      proc.on('close', (code) => {
+        clearTimeout(timeout);
+        if (resolved) return;
+        resolved = true;
+
+        if (gotFrames || code === 0) {
+          resolve({ success: true });
+        } else if (stderr.includes('Authorization') || stderr.includes('auth') ||
+                   stderr.includes('Unauthorized') || stderr.includes('403') ||
+                   stderr.includes('NetStream.Publish.BadName') ||
+                   stderr.includes('Authentication')) {
+          resolve({ success: false, error: 'Authentication failed — check your stream key' });
+        } else if (stderr.includes('Connection refused') || stderr.includes('Connection timed out') ||
+                   stderr.includes('No route to host') || stderr.includes('getaddrinfo')) {
+          resolve({ success: false, error: 'Could not reach server — check the RTMP URL' });
+        } else {
+          // Extract last meaningful error line from FFmpeg
+          const lines = stderr.split('\n').filter(l => l.trim());
+          const lastLine = lines[lines.length - 1] || `FFmpeg exited with code ${code}`;
+          resolve({ success: false, error: lastLine.substring(0, 200) });
+        }
+      });
+
+      proc.on('error', (err) => {
+        clearTimeout(timeout);
+        if (!resolved) {
+          resolved = true;
+          resolve({ success: false, error: `FFmpeg error: ${err.message}` });
+        }
+      });
+    });
   }
 
   async startDestination(destination: Destination): Promise<void> {
