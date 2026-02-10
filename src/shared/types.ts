@@ -112,4 +112,5 @@ export const IPC = {
 
   // App
   GET_INGEST_URL: 'app:get-ingest-url',
+
 } as const;

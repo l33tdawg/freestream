@@ -34,9 +34,20 @@ test('"Ingest Server" card heading visible', async () => {
   await expect(heading).toBeVisible();
 });
 
-test('RTMP URL displayed (contains rtmp://localhost)', async () => {
+test('disconnected state shows "See Settings for setup info"', async () => {
+  const hint = page.locator('text=See Settings for setup info');
+  await expect(hint).toBeVisible();
+});
+
+test('RTMP URL displayed in Settings dialog', async () => {
+  const settingsBtn = page.locator('button:has(path[d^="M9.594"])').first();
+  await settingsBtn.click();
+
   const urlCode = page.locator('code.font-mono');
   await expect(urlCode.first()).toContainText('rtmp://localhost');
+
+  const closeBtn = page.locator('button', { hasText: 'Close' });
+  await closeBtn.click();
 });
 
 test('"Go Live" button exists and is disabled', async () => {

@@ -3,13 +3,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import IngestStatus from '../components/IngestStatus';
 import type { IngestStatus as IngestStatusType } from '../../shared/types';
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  (window.freestream.getIngestUrl as ReturnType<typeof vi.fn>).mockResolvedValue('rtmp://localhost:1935/live');
-  (window.freestream.getNetworkIngestUrl as ReturnType<typeof vi.fn>).mockResolvedValue('rtmp://192.168.1.10:1935/live');
-  (window.freestream.getIngestStreamKey as ReturnType<typeof vi.fn>).mockResolvedValue('stream');
-});
-
 describe('IngestStatus', () => {
   it('shows disconnected state when connected=false', async () => {
     const status: IngestStatusType = { connected: false };
@@ -20,12 +13,13 @@ describe('IngestStatus', () => {
     });
   });
 
-  it('shows OBS instructions when disconnected', async () => {
+  it('shows waiting message with settings hint when disconnected', async () => {
     const status: IngestStatusType = { connected: false };
     render(<IngestStatus status={status} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/In OBS, set the/i)).toBeInTheDocument();
+      expect(screen.getByText('Waiting for OBS connection...')).toBeInTheDocument();
+      expect(screen.getByText('See Settings for setup info')).toBeInTheDocument();
     });
   });
 
@@ -47,7 +41,7 @@ describe('IngestStatus', () => {
     });
   });
 
-  it('does not show instructions when connected', async () => {
+  it('does not show setup instructions when connected', async () => {
     const status: IngestStatusType = { connected: true };
     render(<IngestStatus status={status} />);
 
@@ -55,15 +49,19 @@ describe('IngestStatus', () => {
       expect(screen.getByText('OBS Connected')).toBeInTheDocument();
     });
 
-    expect(screen.queryByText(/In OBS, set the/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('See Settings for setup info')).not.toBeInTheDocument();
   });
 
-  it('displays the ingest URL', async () => {
+  it('does not show ingest URL in disconnected state (moved to Settings)', async () => {
     const status: IngestStatusType = { connected: false };
     render(<IngestStatus status={status} />);
 
     await waitFor(() => {
-      expect(screen.getByText('rtmp://localhost:1935/live')).toBeInTheDocument();
+      expect(screen.getByText('Waiting for OBS')).toBeInTheDocument();
     });
+
+    // Ingest URL fields have been moved to Settings dialog
+    expect(screen.queryByText('Server URL')).not.toBeInTheDocument();
+    expect(screen.queryByText('Stream Key')).not.toBeInTheDocument();
   });
 });

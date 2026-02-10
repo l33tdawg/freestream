@@ -12,11 +12,14 @@ export default function StreamPreview({ previewUrl }: Props) {
   const playerRef = useRef<mpegts.Player | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
   const animFrameRef = useRef<number>(0);
   const [audioLevel, setAudioLevel] = useState(0);
   const [peakLevel, setPeakLevel] = useState(0);
   const peakDecayRef = useRef(0);
   const [error, setError] = useState<string | null>(null);
+  const [volume, setVolume] = useState(75);
+  const [muted, setMuted] = useState(true);
 
   const cleanup = useCallback(() => {
     cancelAnimationFrame(animFrameRef.current);
@@ -34,6 +37,7 @@ export default function StreamPreview({ previewUrl }: Props) {
       audioCtxRef.current = null;
     }
     analyserRef.current = null;
+    gainRef.current = null;
   }, []);
 
   useEffect(() => {
@@ -78,10 +82,9 @@ export default function StreamPreview({ previewUrl }: Props) {
         analyser.fftSize = 256;
         analyser.smoothingTimeConstant = 0.8;
 
-        // Route: source -> analyser -> gain(0) -> destination
-        // This lets us analyze audio without playing it
         const gain = audioCtx.createGain();
-        gain.gain.value = 0;
+        gain.gain.value = muted ? 0 : volume / 100;
+        gainRef.current = gain;
 
         source.connect(analyser);
         analyser.connect(gain);
@@ -135,11 +138,54 @@ export default function StreamPreview({ previewUrl }: Props) {
     };
   }, [previewUrl, cleanup]);
 
+  // Update gain when volume or muted changes
+  useEffect(() => {
+    if (gainRef.current) {
+      gainRef.current.gain.value = muted ? 0 : volume / 100;
+    }
+  }, [volume, muted]);
+
+  const handleToggleMute = () => {
+    setMuted(!muted);
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setVolume(val);
+    if (val > 0 && muted) {
+      setMuted(false);
+    } else if (val === 0 && !muted) {
+      setMuted(true);
+    }
+  };
+
   const getSegmentColor = (index: number, total: number) => {
     const ratio = index / total;
     if (ratio > 0.85) return '#ef4444'; // red
     if (ratio > 0.65) return '#eab308'; // yellow
     return '#22c55e'; // green
+  };
+
+  const VolumeIcon = () => {
+    if (muted || volume === 0) {
+      return (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6l4.72-3.15a.75.75 0 011.28.53v13.74a.75.75 0 01-1.28.53L6.75 14.25H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+        </svg>
+      );
+    }
+    if (volume < 50) {
+      return (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M6.75 8.25l4.72-3.15a.75.75 0 011.28.53v13.74a.75.75 0 01-1.28.53L6.75 14.25H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+        </svg>
+      );
+    }
+    return (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-3.15a.75.75 0 011.28.53v13.74a.75.75 0 01-1.28.53L6.75 14.25H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+      </svg>
+    );
   };
 
   return (
@@ -151,7 +197,6 @@ export default function StreamPreview({ previewUrl }: Props) {
             ref={videoRef}
             className="w-full h-full object-contain"
             style={{ maxHeight: '300px' }}
-            muted
             playsInline
           />
           {error && (
@@ -198,6 +243,38 @@ export default function StreamPreview({ previewUrl }: Props) {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Volume control bar */}
+      <div
+        className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-xl"
+        style={{
+          background: 'var(--color-ingest-box-bg)',
+          border: '1px solid var(--color-ingest-box-border)',
+        }}
+      >
+        <button
+          onClick={handleToggleMute}
+          className="flex-shrink-0 p-0.5 rounded transition-colors duration-150"
+          style={{ color: muted ? 'var(--color-text-muted)' : 'var(--color-text-secondary)' }}
+        >
+          <VolumeIcon />
+        </button>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={muted ? 0 : volume}
+          onChange={handleVolumeChange}
+          className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #e94560 0%, #e94560 ${muted ? 0 : volume}%, var(--color-meter-segment-off) ${muted ? 0 : volume}%, var(--color-meter-segment-off) 100%)`,
+            accentColor: '#e94560',
+          }}
+        />
+        <span className="text-[11px] font-mono tabular-nums w-8 text-right" style={{ color: 'var(--color-text-muted)' }}>
+          {muted ? 0 : volume}%
+        </span>
       </div>
     </div>
   );

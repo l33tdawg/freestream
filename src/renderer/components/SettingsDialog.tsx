@@ -12,13 +12,20 @@ export default function SettingsDialog({ open, onClose }: Props) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [ffmpegStatus, setFfmpegStatus] = useState<string>('Detecting...');
   const [saved, setSaved] = useState(false);
+  const [ingestUrl, setIngestUrl] = useState('');
+  const [networkUrl, setNetworkUrl] = useState('');
+  const [streamKey, setStreamKey] = useState('');
+  const [copiedField, setCopiedField] = useState<'url' | 'key' | 'network' | null>(null);
 
   useEffect(() => {
     if (open) {
       window.freestream.getSettings().then(setSettings);
-      window.freestream.detectFfmpeg().then((path) => {
+      window.freestream.detectFfmpeg().then((path: string) => {
         setFfmpegStatus(path ? `Found: ${path}` : 'Not found — install FFmpeg to enable fan-out');
       }).catch(() => setFfmpegStatus('Detection failed'));
+      window.freestream.getIngestUrl().then(setIngestUrl);
+      window.freestream.getNetworkIngestUrl().then(setNetworkUrl);
+      window.freestream.getIngestStreamKey().then(setStreamKey);
     }
   }, [open]);
 
@@ -32,6 +39,12 @@ export default function SettingsDialog({ open, onClose }: Props) {
 
   const update = (key: keyof AppSettings, value: any) => {
     setSettings({ ...settings, [key]: value });
+  };
+
+  const copyField = async (value: string, field: 'url' | 'key' | 'network') => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
@@ -53,6 +66,81 @@ export default function SettingsDialog({ open, onClose }: Props) {
         </div>
 
         <div className="px-6 pb-6 space-y-5">
+          {/* Ingest Server Setup */}
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text-muted)' }}>Ingest Server</label>
+            <div className="space-y-2">
+              {/* Server URL */}
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Server URL
+                </label>
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
+                  style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
+                  onClick={() => copyField(ingestUrl, 'url')}
+                >
+                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{ingestUrl}</code>
+                  <span
+                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'url' ? 'bg-success/20 text-success' : ''}`}
+                    style={copiedField !== 'url' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
+                  >
+                    {copiedField === 'url' ? 'Copied' : 'Copy'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stream Key */}
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                  Stream Key
+                </label>
+                <div
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
+                  style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
+                  onClick={() => copyField(streamKey, 'key')}
+                >
+                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{streamKey}</code>
+                  <span
+                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'key' ? 'bg-success/20 text-success' : ''}`}
+                    style={copiedField !== 'key' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
+                  >
+                    {copiedField === 'key' ? 'Copied' : 'Copy'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Network URL */}
+              {networkUrl && networkUrl !== ingestUrl && (
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                    Network URL <span className="normal-case font-normal">(for remote OBS)</span>
+                  </label>
+                  <div
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
+                    style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
+                    onClick={() => copyField(networkUrl, 'network')}
+                  >
+                    <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{networkUrl}</code>
+                    <span
+                      className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'network' ? 'bg-success/20 text-success' : ''}`}
+                      style={copiedField !== 'network' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
+                    >
+                      {copiedField === 'network' ? 'Copied' : 'Copy'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                In OBS, set the <strong>Server</strong> to the URL above and <strong>Stream Key</strong> to <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'var(--color-code-bg)', color: 'var(--color-text-secondary)' }}>{streamKey}</code>
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: '1px solid var(--color-divider)' }} />
+
           {/* RTMP Port */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>RTMP Ingest Port</label>

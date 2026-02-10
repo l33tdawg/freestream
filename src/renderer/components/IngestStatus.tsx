@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { IngestStatus as IngestStatusType } from '../../shared/types';
 import StreamPreview from './StreamPreview';
 import Tooltip from './Tooltip';
-import { useTheme } from '../hooks/useTheme';
 
 interface Props {
   status: IngestStatusType;
@@ -22,25 +21,6 @@ function formatBitrate(kbps: number): string {
 }
 
 export default function IngestStatus({ status }: Props) {
-  const [ingestUrl, setIngestUrl] = useState('');
-  const [networkUrl, setNetworkUrl] = useState('');
-  const [streamKey, setStreamKey] = useState('');
-  const [copiedField, setCopiedField] = useState<'url' | 'key' | 'network' | null>(null);
-  const [showSetup, setShowSetup] = useState(false);
-  const { isDark } = useTheme();
-
-  useEffect(() => {
-    window.freestream.getIngestUrl().then(setIngestUrl);
-    window.freestream.getNetworkIngestUrl().then(setNetworkUrl);
-    window.freestream.getIngestStreamKey().then(setStreamKey);
-  }, []);
-
-  const copyField = async (value: string, field: 'url' | 'key') => {
-    await navigator.clipboard.writeText(value);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
   const hasStats = status.bitrate || status.fps || status.resolution || status.codec;
 
   return (
@@ -150,178 +130,27 @@ export default function IngestStatus({ status }: Props) {
             </div>
           )}
 
-          {/* Show setup info toggle */}
+          {/* Connected from IP */}
           {status.clientIp && (
-            <div className="flex items-center justify-between mt-2">
+            <div className="mt-2">
               <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
                 Connected from {status.clientIp}
               </p>
-              <button
-                onClick={() => setShowSetup(!showSetup)}
-                className="text-[10px] font-medium transition-colors duration-150"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {showSetup ? 'Hide' : 'Setup info'}
-              </button>
-            </div>
-          )}
-
-          {/* Collapsible setup info when connected */}
-          {showSetup && (
-            <div className="space-y-2 mt-2">
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Server URL
-                </label>
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
-                  style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
-                  onClick={() => copyField(ingestUrl, 'url')}
-                >
-                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{ingestUrl}</code>
-                  <span
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'url' ? 'bg-success/20 text-success' : ''}`}
-                    style={copiedField !== 'url' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                  >
-                    {copiedField === 'url' ? 'Copied' : 'Copy'}
-                  </span>
-                </div>
-              </div>
-              {networkUrl && networkUrl !== ingestUrl && (
-                <div>
-                  <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                    Network URL <span className="normal-case font-normal">(for remote OBS)</span>
-                  </label>
-                  <div
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
-                    style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
-                    onClick={() => copyField(networkUrl, 'network')}
-                  >
-                    <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{networkUrl}</code>
-                    <span
-                      className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'network' ? 'bg-success/20 text-success' : ''}`}
-                      style={copiedField !== 'network' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                    >
-                      {copiedField === 'network' ? 'Copied' : 'Copy'}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                  Stream Key
-                </label>
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-200"
-                  style={{ background: 'var(--color-ingest-box-bg)', border: '1px solid var(--color-ingest-box-border)' }}
-                  onClick={() => copyField(streamKey, 'key')}
-                >
-                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{streamKey}</code>
-                  <span
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${copiedField === 'key' ? 'bg-success/20 text-success' : ''}`}
-                    style={copiedField !== 'key' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                  >
-                    {copiedField === 'key' ? 'Copied' : 'Copy'}
-                  </span>
-                </div>
-              </div>
             </div>
           )}
         </>
       )}
 
-      {/* Disconnected state: show setup info */}
+      {/* Disconnected state: minimal waiting message */}
       {!status.connected && (
-        <>
-          <div className="space-y-2">
-            {/* Server URL */}
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                Server URL
-              </label>
-              <Tooltip content={copiedField === 'url' ? 'Copied!' : 'Copy server URL'} position="bottom">
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2 group cursor-pointer transition-all duration-200"
-                  style={{
-                    background: 'var(--color-ingest-box-bg)',
-                    border: '1px solid var(--color-ingest-box-border)',
-                  }}
-                  onClick={() => copyField(ingestUrl, 'url')}
-                >
-                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{ingestUrl}</code>
-                  <span
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${
-                      copiedField === 'url' ? 'bg-success/20 text-success' : ''
-                    }`}
-                    style={copiedField !== 'url' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                  >
-                    {copiedField === 'url' ? 'Copied' : 'Copy'}
-                  </span>
-                </div>
-              </Tooltip>
-            </div>
-
-            {/* Stream Key */}
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                Stream Key
-              </label>
-              <Tooltip content={copiedField === 'key' ? 'Copied!' : 'Copy stream key'} position="bottom">
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2 group cursor-pointer transition-all duration-200"
-                  style={{
-                    background: 'var(--color-ingest-box-bg)',
-                    border: '1px solid var(--color-ingest-box-border)',
-                  }}
-                  onClick={() => copyField(streamKey, 'key')}
-                >
-                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{streamKey}</code>
-                  <span
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${
-                      copiedField === 'key' ? 'bg-success/20 text-success' : ''
-                    }`}
-                    style={copiedField !== 'key' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                  >
-                    {copiedField === 'key' ? 'Copied' : 'Copy'}
-                  </span>
-                </div>
-              </Tooltip>
-            </div>
-          </div>
-
-          {/* Network URL for remote OBS */}
-          {networkUrl && networkUrl !== ingestUrl && (
-            <div className="mt-2">
-              <label className="block text-[10px] font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                Network URL <span className="normal-case font-normal">(for remote OBS)</span>
-              </label>
-              <Tooltip content={copiedField === 'network' ? 'Copied!' : 'Copy network URL'} position="bottom">
-                <div
-                  className="flex items-center gap-2 rounded-xl px-3 py-2 group cursor-pointer transition-all duration-200"
-                  style={{
-                    background: 'var(--color-ingest-box-bg)',
-                    border: '1px solid var(--color-ingest-box-border)',
-                  }}
-                  onClick={() => copyField(networkUrl, 'network')}
-                >
-                  <code className="text-[13px] flex-1 truncate font-mono" style={{ color: 'var(--color-text-muted)' }}>{networkUrl}</code>
-                  <span
-                    className={`text-[11px] px-2.5 py-1 rounded-lg font-medium transition-all duration-200 ${
-                      copiedField === 'network' ? 'bg-success/20 text-success' : ''
-                    }`}
-                    style={copiedField !== 'network' ? { color: 'var(--color-text-muted)', background: 'var(--color-copy-btn-bg)' } : {}}
-                  >
-                    {copiedField === 'network' ? 'Copied' : 'Copy'}
-                  </span>
-                </div>
-              </Tooltip>
-            </div>
-          )}
-
-          <p className="mt-2.5 text-[11px] leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-            In OBS, set the <strong>Server</strong> to the URL above and <strong>Stream Key</strong> to <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'var(--color-code-bg)', color: 'var(--color-text-secondary)' }}>{streamKey}</code>
+        <div className="py-4 text-center">
+          <p className="text-[12px]" style={{ color: 'var(--color-text-muted)' }}>
+            Waiting for OBS connection...
           </p>
-        </>
+          <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-faint)' }}>
+            See Settings for setup info
+          </p>
+        </div>
       )}
     </div>
   );

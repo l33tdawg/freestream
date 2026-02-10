@@ -26,8 +26,7 @@ mac:
   gatekeeperAssess: false
   entitlements: assets/entitlements.plist
   entitlementsInherit: assets/entitlements.plist
-  notarize:
-    teamId: 2N7GKZ8D8Z
+  notarize: true
 
 dmg:
   title: ${productName}
