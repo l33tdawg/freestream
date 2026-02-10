@@ -1,0 +1,58 @@
+appId: com.freestream.app
+productName: FreEstream
+copyright: Copyright © 2025 FreEstream
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - dist/**/*
+  - node_modules/**/*
+  - "!node_modules/**/README.md"
+  - "!node_modules/**/CHANGELOG.md"
+  - "!node_modules/**/*.ts"
+
+mac:
+  category: public.app-category.video
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: assets/icons/icon.icns
+  darkModeSupport: true
+  hardenedRuntime: true
+  entitlements: assets/entitlements.plist
+  entitlementsInherit: assets/entitlements.plist
+
+dmg:
+  title: ${productName}
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/icons/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  category: AudioVideo
+  icon: assets/icons

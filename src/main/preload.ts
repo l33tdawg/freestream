@@ -1,0 +1,72 @@
+import { contextBridge, ipcRenderer } from 'electron';
+
+// IPC channel names inlined — sandboxed preload cannot require() relative modules
+const IPC = {
+  GET_DESTINATIONS: 'destinations:get',
+  ADD_DESTINATION: 'destinations:add',
+  UPDATE_DESTINATION: 'destinations:update',
+  REMOVE_DESTINATION: 'destinations:remove',
+  TOGGLE_DESTINATION: 'destinations:toggle',
+  SET_STREAM_KEY: 'secrets:set-key',
+  GET_STREAM_KEY: 'secrets:get-key',
+  GO_LIVE: 'stream:go-live',
+  STOP_ALL: 'stream:stop-all',
+  STOP_DESTINATION: 'stream:stop-destination',
+  GET_STREAM_STATUS: 'stream:get-status',
+  INGEST_STATUS_CHANGED: 'event:ingest-status',
+  DESTINATION_STATUS_CHANGED: 'event:destination-status',
+  GET_SETTINGS: 'settings:get',
+  UPDATE_SETTINGS: 'settings:update',
+  DETECT_FFMPEG: 'ffmpeg:detect',
+  GET_INGEST_URL: 'app:get-ingest-url',
+} as const;
+
+const api = {
+  // Destinations
+  getDestinations: () => ipcRenderer.invoke(IPC.GET_DESTINATIONS),
+  addDestination: (platform: string, name: string, url: string, streamKey: string) =>
+    ipcRenderer.invoke(IPC.ADD_DESTINATION, platform, name, url, streamKey),
+  updateDestination: (id: string, updates: any, streamKey?: string) =>
+    ipcRenderer.invoke(IPC.UPDATE_DESTINATION, id, updates, streamKey),
+  removeDestination: (id: string) => ipcRenderer.invoke(IPC.REMOVE_DESTINATION, id),
+  toggleDestination: (id: string) => ipcRenderer.invoke(IPC.TOGGLE_DESTINATION, id),
+
+  // Stream keys
+  setStreamKey: (destinationId: string, key: string) =>
+    ipcRenderer.invoke(IPC.SET_STREAM_KEY, destinationId, key),
+  getStreamKey: (destinationId: string) =>
+    ipcRenderer.invoke(IPC.GET_STREAM_KEY, destinationId),
+
+  // Streaming
+  goLive: () => ipcRenderer.invoke(IPC.GO_LIVE),
+  stopAll: () => ipcRenderer.invoke(IPC.STOP_ALL),
+  stopDestination: (id: string) => ipcRenderer.invoke(IPC.STOP_DESTINATION, id),
+  getStreamStatus: () => ipcRenderer.invoke(IPC.GET_STREAM_STATUS),
+
+  // Settings
+  getSettings: () => ipcRenderer.invoke(IPC.GET_SETTINGS),
+  updateSettings: (updates: any) => ipcRenderer.invoke(IPC.UPDATE_SETTINGS, updates),
+
+  // FFmpeg
+  detectFfmpeg: () => ipcRenderer.invoke(IPC.DETECT_FFMPEG),
+
+  // App
+  getIngestUrl: () => ipcRenderer.invoke(IPC.GET_INGEST_URL),
+  getPlatformPresets: () => ipcRenderer.invoke('app:get-platform-presets'),
+
+  // Event listeners
+  onIngestStatusChanged: (callback: (status: any) => void) => {
+    const listener = (_event: any, status: any) => callback(status);
+    ipcRenderer.on(IPC.INGEST_STATUS_CHANGED, listener);
+    return () => ipcRenderer.removeListener(IPC.INGEST_STATUS_CHANGED, listener);
+  },
+  onDestinationStatusChanged: (callback: (status: any) => void) => {
+    const listener = (_event: any, status: any) => callback(status);
+    ipcRenderer.on(IPC.DESTINATION_STATUS_CHANGED, listener);
+    return () => ipcRenderer.removeListener(IPC.DESTINATION_STATUS_CHANGED, listener);
+  },
+};
+
+contextBridge.exposeInMainWorld('freestream', api);
+
+export type FreEstreamAPI = typeof api;

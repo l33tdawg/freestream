@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── Theme CSS Variables ── */
+  :root {
+    --color-surface: #0d0d1a;
+    --color-surface-gradient: linear-gradient(145deg, #0d0d1a 0%, #111128 50%, #0d0d1a 100%);
+    --color-glass-bg: rgba(255, 255, 255, 0.04);
+    --color-glass-bg-hover: rgba(255, 255, 255, 0.07);
+    --color-glass-border: rgba(255, 255, 255, 0.06);
+    --color-glass-border-hover: rgba(255, 255, 255, 0.1);
+    --color-glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --color-glass-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --color-text-primary: #f3f4f6;
+    --color-text-secondary: #d1d5db;
+    --color-text-muted: #6b7280;
+    --color-text-faint: rgba(255, 255, 255, 0.45);
+    --color-input-bg: rgba(255, 255, 255, 0.04);
+    --color-input-bg-focus: rgba(255, 255, 255, 0.06);
+    --color-input-border: rgba(255, 255, 255, 0.08);
+    --color-btn-secondary-bg: rgba(255, 255, 255, 0.06);
+    --color-btn-secondary-bg-hover: rgba(255, 255, 255, 0.1);
+    --color-btn-secondary-border: rgba(255, 255, 255, 0.08);
+    --color-btn-secondary-border-hover: rgba(255, 255, 255, 0.14);
+    --color-btn-secondary-text: #d1d5db;
+    --color-modal-bg: linear-gradient(180deg, rgba(30, 30, 50, 0.98) 0%, rgba(20, 20, 35, 0.98) 100%);
+    --color-modal-border: rgba(255, 255, 255, 0.08);
+    --color-modal-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --color-divider: rgba(255, 255, 255, 0.05);
+    --color-sidebar-bg: rgba(255, 255, 255, 0.02);
+    --color-sidebar-border: rgba(255, 255, 255, 0.06);
+    --color-sidebar-hover: rgba(255, 255, 255, 0.06);
+    --color-code-bg: rgba(255, 255, 255, 0.05);
+    --color-copy-btn-bg: rgba(255, 255, 255, 0.06);
+    --color-toggle-off: rgba(255, 255, 255, 0.1);
+    --color-pill-bg: rgba(255, 255, 255, 0.06);
+    --color-pill-border: rgba(255, 255, 255, 0.04);
+    --color-pill-text: rgba(255, 255, 255, 0.45);
+    --color-scrollbar-thumb: rgba(255, 255, 255, 0.1);
+    --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.18);
+    --color-selection-bg: rgba(233, 69, 96, 0.3);
+    --color-selection-text: #ffffff;
+    --color-tooltip-bg: rgba(13, 13, 26, 0.95);
+    --color-tooltip-border: rgba(255, 255, 255, 0.1);
+    --color-disabled-bg: rgba(255, 255, 255, 0.06);
+    --color-disabled-text: rgba(255, 255, 255, 0.3);
+    --color-platform-unselected-bg: rgba(255, 255, 255, 0.03);
+    --color-platform-unselected-border: rgba(255, 255, 255, 0.05);
+    --color-ingest-box-bg: rgba(255, 255, 255, 0.03);
+    --color-ingest-box-border: rgba(255, 255, 255, 0.05);
+  }
+
+  :root.light {
+    --color-surface: #f8f9fb;
+    --color-surface-gradient: linear-gradient(145deg, #f8f9fb 0%, #eef0f4 50%, #f8f9fb 100%);
+    --color-glass-bg: rgba(255, 255, 255, 0.7);
+    --color-glass-bg-hover: rgba(255, 255, 255, 0.85);
+    --color-glass-border: rgba(0, 0, 0, 0.08);
+    --color-glass-border-hover: rgba(0, 0, 0, 0.12);
+    --color-glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --color-glass-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --color-text-primary: #111827;
+    --color-text-secondary: #374151;
+    --color-text-muted: #6b7280;
+    --color-text-faint: rgba(0, 0, 0, 0.35);
+    --color-input-bg: rgba(0, 0, 0, 0.03);
+    --color-input-bg-focus: rgba(0, 0, 0, 0.05);
+    --color-input-border: rgba(0, 0, 0, 0.1);
+    --color-btn-secondary-bg: rgba(0, 0, 0, 0.05);
+    --color-btn-secondary-bg-hover: rgba(0, 0, 0, 0.08);
+    --color-btn-secondary-border: rgba(0, 0, 0, 0.1);
+    --color-btn-secondary-border-hover: rgba(0, 0, 0, 0.15);
+    --color-btn-secondary-text: #374151;
+    --color-modal-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 249, 251, 0.98) 100%);
+    --color-modal-border: rgba(0, 0, 0, 0.1);
+    --color-modal-shadow: 0 24px 80px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+    --color-divider: rgba(0, 0, 0, 0.08);
+    --color-sidebar-bg: rgba(0, 0, 0, 0.02);
+    --color-sidebar-border: rgba(0, 0, 0, 0.08);
+    --color-sidebar-hover: rgba(0, 0, 0, 0.05);
+    --color-code-bg: rgba(0, 0, 0, 0.04);
+    --color-copy-btn-bg: rgba(0, 0, 0, 0.05);
+    --color-toggle-off: rgba(0, 0, 0, 0.12);
+    --color-pill-bg: rgba(0, 0, 0, 0.05);
+    --color-pill-border: rgba(0, 0, 0, 0.06);
+    --color-pill-text: rgba(0, 0, 0, 0.5);
+    --color-scrollbar-thumb: rgba(0, 0, 0, 0.12);
+    --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.2);
+    --color-selection-bg: rgba(233, 69, 96, 0.2);
+    --color-selection-text: #111827;
+    --color-tooltip-bg: rgba(13, 13, 26, 0.95);
+    --color-tooltip-border: rgba(255, 255, 255, 0.1);
+    --color-disabled-bg: rgba(0, 0, 0, 0.04);
+    --color-disabled-text: rgba(0, 0, 0, 0.25);
+    --color-platform-unselected-bg: rgba(0, 0, 0, 0.02);
+    --color-platform-unselected-border: rgba(0, 0, 0, 0.06);
+    --color-ingest-box-bg: rgba(0, 0, 0, 0.02);
+    --color-ingest-box-border: rgba(0, 0, 0, 0.06);
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply font-sans;
+    color: var(--color-text-primary);
+    background: var(--color-surface-gradient);
+    -webkit-app-region: no-drag;
+  }
+
+  ::selection {
+    background: var(--color-selection-bg);
+    color: var(--color-selection-text);
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-scrollbar-thumb-hover);
+  }
+}
+
+@layer components {
+  .drag-region {
+    -webkit-app-region: drag;
+  }
+
+  .no-drag {
+    -webkit-app-region: no-drag;
+  }
+
+  /* Glass card — macOS vibrancy-inspired */
+  .glass {
+    background: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: var(--color-glass-shadow);
+  }
+
+  .glass-hover {
+    @apply glass;
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .glass-hover:hover {
+    background: var(--color-glass-bg-hover);
+    border-color: var(--color-glass-border-hover);
+    box-shadow: var(--color-glass-shadow-hover);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply px-5 py-2.5 text-white font-medium rounded-xl transition-all duration-200;
+    background: linear-gradient(135deg, #e94560 0%, #d63851 100%);
+    box-shadow: 0 2px 8px rgba(233, 69, 96, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff6b81 0%, #e94560 100%);
+    box-shadow: 0 4px 16px rgba(233, 69, 96, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-0.5px);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(233, 69, 96, 0.2);
+  }
+  .btn-primary:disabled {
+    @apply opacity-40 cursor-not-allowed;
+    filter: saturate(0.5);
+  }
+
+  .btn-secondary {
+    @apply px-5 py-2.5 font-medium rounded-xl transition-all duration-200;
+    color: var(--color-btn-secondary-text);
+    background: var(--color-btn-secondary-bg);
+    border: 1px solid var(--color-btn-secondary-border);
+  }
+  .btn-secondary:hover {
+    background: var(--color-btn-secondary-bg-hover);
+    border-color: var(--color-btn-secondary-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  .btn-danger {
+    @apply px-5 py-2.5 text-white font-medium rounded-xl transition-all duration-200;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  }
+  .btn-danger:hover {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+    transform: translateY(-0.5px);
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl placeholder-gray-500 transition-all duration-200;
+    color: var(--color-text-primary);
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-input-border);
+    outline: none;
+  }
+  .input-field:focus {
+    background: var(--color-input-bg-focus);
+    border-color: rgba(233, 69, 96, 0.5);
+    box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.12);
+  }
+
+  /* Card */
+  .card {
+    @apply glass rounded-2xl p-4;
+  }
+
+  /* Toggle switch */
+  .toggle-track {
+    @apply relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer;
+  }
+  .toggle-thumb {
+    @apply absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full transition-all duration-200;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  .modal-content {
+    @apply w-full max-w-md mx-4 rounded-3xl overflow-hidden;
+    background: var(--color-modal-bg);
+    border: 1px solid var(--color-modal-border);
+    box-shadow: var(--color-modal-shadow);
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+/* Animations defined via keyframes for non-Tailwind use */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
