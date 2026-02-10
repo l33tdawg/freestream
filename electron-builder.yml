@@ -23,8 +23,11 @@ mac:
   icon: assets/icons/icon.icns
   darkModeSupport: true
   hardenedRuntime: true
+  gatekeeperAssess: false
   entitlements: assets/entitlements.plist
   entitlementsInherit: assets/entitlements.plist
+  notarize:
+    teamId: 2N7GKZ8D8Z
 
 dmg:
   title: ${productName}
