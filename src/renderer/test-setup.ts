@@ -48,7 +48,11 @@ const mockFreestream = {
   // App
   getIngestUrl: vi.fn(),
   getIngestStreamKey: vi.fn(),
+  getNetworkIngestUrl: vi.fn(),
   getPlatformPresets: vi.fn(),
+
+  // Stream key verification
+  testConnection: vi.fn(),
 
   // Event listeners
   onIngestStatusChanged: vi.fn().mockReturnValue(() => {}),

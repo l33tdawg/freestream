@@ -6,6 +6,7 @@ import type { IngestStatus as IngestStatusType } from '../../shared/types';
 beforeEach(() => {
   vi.clearAllMocks();
   (window.freestream.getIngestUrl as ReturnType<typeof vi.fn>).mockResolvedValue('rtmp://localhost:1935/live');
+  (window.freestream.getNetworkIngestUrl as ReturnType<typeof vi.fn>).mockResolvedValue('rtmp://192.168.1.10:1935/live');
   (window.freestream.getIngestStreamKey as ReturnType<typeof vi.fn>).mockResolvedValue('stream');
 });
 

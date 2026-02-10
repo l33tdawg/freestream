@@ -38,20 +38,74 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
   - Linux: `sudo apt install ffmpeg` (or your distro's package manager)
 - **Node.js 18+** (for development only)
 
-## Installation
+## Download
 
-Download the latest release for your platform from the [Releases](../../releases) page.
+Grab the latest v1.0.0 release for your platform:
+
+| Platform | Download |
+|----------|----------|
+| macOS (Apple Silicon) | [FreEstream-1.0.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0-arm64.dmg) |
+| macOS (Intel) | [FreEstream-1.0.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0.dmg) |
+| Windows (x64) | [FreEstream Setup 1.0.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream.Setup.1.0.0.exe) |
+| Linux (x64) | [FreEstream-1.0.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.0.0/FreEstream-1.0.0.AppImage) |
+
+Or browse all releases on the [Releases](https://github.com/l33tdawg/freestream/releases) page.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/user/FreEstream.git
-cd FreEstream
+git clone https://github.com/l33tdawg/freestream.git
+cd freestream
 npm install
 npm run dist
 ```
 
 The distributable will be in the `release/` directory.
+
+### Platform-specific builds
+
+FreEstream builds native installers for macOS, Windows, and Linux using [electron-builder](https://www.electron.build/).
+
+#### macOS — DMG (x64 + Apple Silicon)
+
+```bash
+# Must be run on macOS
+npm run dist
+```
+
+- Produces a universal DMG supporting both Intel (x64) and Apple Silicon (arm64)
+- Hardened runtime is enabled with entitlements for network access (required for RTMP streaming) and JIT/unsigned memory (required by Electron)
+- For distribution outside the Mac App Store, you'll need to code-sign and notarize:
+  - Set `CSC_LINK` and `CSC_KEY_PASSWORD` environment variables with your Developer ID certificate
+  - Set `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, and `APPLE_TEAM_ID` for notarization
+- Output: `release/FreEstream-<version>-arm64.dmg` and `release/FreEstream-<version>-x64.dmg`
+
+#### Windows — NSIS Installer (x64)
+
+```bash
+# Must be run on Windows (or via CI with Wine)
+npm run dist
+```
+
+- Produces an NSIS installer with optional per-user or per-machine install
+- Users can choose their installation directory
+- App data is preserved on uninstall
+- For signed builds, set `CSC_LINK` and `CSC_KEY_PASSWORD` with your code-signing certificate
+- Output: `release/FreEstream Setup <version>.exe`
+
+#### Linux — AppImage (x64)
+
+```bash
+# Must be run on Linux
+npm run dist
+```
+
+- Produces a portable AppImage — no installation required, just make it executable and run
+- Categorized as `AudioVideo` in desktop environments
+- Icons are included at all standard sizes (16px through 512px)
+- Output: `release/FreEstream-<version>.AppImage`
+
+> **Note:** You can only build the native format for the OS you're running on. To build all three, use a CI pipeline (e.g., GitHub Actions) with macOS, Windows, and Linux runners.
 
 ## Development
 
