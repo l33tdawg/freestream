@@ -28,6 +28,7 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
 - **Real-time health monitoring** — bitrate, FPS, uptime, and dropped frames per destination
 - **Auto-reconnect** — configurable retry logic if a destination drops
 - **Cross-platform** — macOS (DMG), Windows (NSIS installer), Linux (AppImage)
+- **Stream preview** — live preview of your ingest stream right in the app
 - **Dark theme** — easy on the eyes during long streams
 
 ## Prerequisites
@@ -40,7 +41,7 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
 
 ## Download
 
-Grab the latest v1.0.0 release for your platform:
+Grab the latest v1.0.0 release for your platform. macOS builds are code-signed and notarized by Apple.
 
 | Platform | Download |
 |----------|----------|
@@ -148,6 +149,7 @@ src/
 │   ├── index.ts           # Entry point, window creation
 │   ├── nms.ts             # RTMP ingest server
 │   ├── ffmpeg-manager.ts  # FFmpeg process management
+│   ├── ffmpeg-detector.ts # FFmpeg auto-detection
 │   ├── stream-monitor.ts  # Real-time status monitoring
 │   ├── destination-manager.ts
 │   ├── ipc-handlers.ts    # IPC handler registrations

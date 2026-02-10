@@ -2,6 +2,8 @@
   "name": "freestream",
   "version": "1.0.0",
   "description": "Free multi-streaming desktop app — fan out your stream to Twitch, YouTube, Facebook, TikTok and more",
+  "author": "Dhillon Kannabhiran",
+  "license": "MIT",
   "main": "dist/main/main/index.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:main\" \"npm run dev:renderer\"",
