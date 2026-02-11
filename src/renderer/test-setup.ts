@@ -39,7 +39,7 @@ const mockFreestream = {
   deleteStreamKey: vi.fn(),
 
   // Settings
-  getSettings: vi.fn().mockResolvedValue({ theme: 'dark' }),
+  getSettings: vi.fn().mockResolvedValue({ theme: 'dark', bufferDuration: 0 }),
   updateSettings: vi.fn().mockResolvedValue(undefined),
 
   // FFmpeg

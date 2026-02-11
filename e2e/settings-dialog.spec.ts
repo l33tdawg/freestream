@@ -21,10 +21,49 @@ test('clicking gear button opens Settings dialog', async () => {
   await expect(heading).toBeVisible();
 });
 
-test('shows RTMP port field with default value 1935', async () => {
+test('default tab is Ingest with server URL visible', async () => {
   // Settings dialog should be open from previous test
+  const ingestTab = page.locator('button', { hasText: 'Ingest' });
+  await expect(ingestTab).toBeVisible();
+
+  const urlCode = page.locator('code.font-mono');
+  await expect(urlCode.first()).toContainText('rtmp://localhost');
+});
+
+test('Ingest tab shows RTMP port field with default value 1935', async () => {
+  // Ingest tab (default) should be active
   const portInput = page.locator('input[type="number"]').first();
   await expect(portInput).toHaveValue('1935');
+});
+
+test('clicking Streaming tab shows buffer duration slider with default 0.0s', async () => {
+  const streamingTab = page.locator('button', { hasText: 'Streaming' });
+  await streamingTab.click();
+  const slider = page.locator('input[type="range"]');
+  await expect(slider).toBeVisible();
+  await expect(slider).toHaveValue('0');
+
+  const label = page.locator('text=Buffer Duration');
+  await expect(label).toBeVisible();
+
+  const hint = page.locator('text=No buffer');
+  await expect(hint).toBeVisible();
+});
+
+test('clicking About tab shows app info', async () => {
+  const aboutTab = page.locator('button', { hasText: 'About' });
+  await aboutTab.click();
+
+  await expect(page.locator('text=FreEstream')).toBeVisible();
+  await expect(page.locator('text=v1.0.0')).toBeVisible();
+  await expect(page.locator('text=Free multi-streaming for everyone')).toBeVisible();
+  await expect(page.locator('text=Made with love for the streaming community')).toBeVisible();
+});
+
+test('About tab hides Save Settings button', async () => {
+  // About tab should be active from previous test
+  const saveBtn = page.locator('button', { hasText: 'Save Settings' });
+  await expect(saveBtn).not.toBeVisible();
 });
 
 test('can close the dialog', async () => {

@@ -62,6 +62,7 @@ export interface IngestStatus {
 export interface AppSettings {
   rtmpPort: number;
   ffmpegPath: string;
+  bufferDuration: number;
   autoReconnect: boolean;
   maxRetries: number;
   minimizeToTray: boolean;

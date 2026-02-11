@@ -265,7 +265,9 @@
   }
 
   .modal-content {
-    @apply w-full max-w-md mx-4 rounded-3xl overflow-hidden;
+    @apply w-full max-w-md mx-4 rounded-3xl;
+    max-height: 90vh;
+    overflow-y: auto;
     background: var(--color-modal-bg);
     border: 1px solid var(--color-modal-border);
     box-shadow: var(--color-modal-shadow);

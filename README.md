@@ -45,10 +45,10 @@ Grab the latest release for your platform. macOS builds are code-signed and nota
 
 | Platform | Download |
 |----------|----------|
-| macOS (Apple Silicon) | [FreEstream-1.1.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0-arm64.dmg) |
-| macOS (Intel) | [FreEstream-1.1.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0.dmg) |
-| Windows (x64) | [FreEstream Setup 1.1.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream.Setup.1.1.0.exe) |
-| Linux (x64) | [FreEstream-1.1.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.1.0/FreEstream-1.1.0.AppImage) |
+| macOS (Apple Silicon) | [FreEstream-1.2.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.2.0/FreEstream-1.2.0-arm64.dmg) |
+| macOS (Intel) | [FreEstream-1.2.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.2.0/FreEstream-1.2.0.dmg) |
+| Windows (x64) | [FreEstream Setup 1.2.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.2.0/FreEstream.Setup.1.2.0.exe) |
+| Linux (x64) | [FreEstream-1.2.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.2.0/FreEstream-1.2.0.AppImage) |
 
 Or browse all releases on the [Releases](https://github.com/l33tdawg/freestream/releases) page.
 

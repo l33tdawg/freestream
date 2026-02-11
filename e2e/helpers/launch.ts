@@ -18,6 +18,21 @@ export async function launchApp(): Promise<{ app: ElectronApplication; page: Pag
   return { app, page };
 }
 
+export async function clearDestinations(page: Page): Promise<void> {
+  const had = await page.evaluate(async () => {
+    const fs = (window as any).freestream;
+    const dests = await fs.getDestinations();
+    for (const d of dests) {
+      await fs.removeDestination(d.id);
+    }
+    return dests.length;
+  });
+  if (had > 0) {
+    await page.reload();
+    await page.waitForSelector('text=FreEstream', { timeout: 15_000 });
+  }
+}
+
 export async function closeApp(app: ElectronApplication): Promise<void> {
   try {
     // Attempt graceful close first

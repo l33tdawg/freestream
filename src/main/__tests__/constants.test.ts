@@ -137,6 +137,10 @@ describe('DEFAULT_SETTINGS', () => {
     expect(DEFAULT_SETTINGS.ffmpegPath).toBe('');
   });
 
+  it('has bufferDuration of 0', () => {
+    expect(DEFAULT_SETTINGS.bufferDuration).toBe(0);
+  });
+
   it('has minimizeToTray enabled', () => {
     expect(DEFAULT_SETTINGS.minimizeToTray).toBe(true);
   });

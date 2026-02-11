@@ -137,12 +137,36 @@ export class FFmpegManager extends EventEmitter {
   }
 
   private spawnFFmpeg(destination: Destination, targetUrl: string, retryCount: number): void {
-    const args = [
-      '-rw_timeout', '5000000',
-      '-i', this.ingestUrl,
+    const settings = getSettings();
+    const buf = settings.bufferDuration || 0;
+
+    const inputFlags: string[] = ['-rw_timeout', '5000000'];
+    if (buf > 0) {
+      const usec = Math.round(buf * 1000000);
+      inputFlags.push(
+        '-fflags', '+genpts+discardcorrupt',
+        '-analyzeduration', String(usec),
+        '-probesize', String(usec),
+      );
+    }
+
+    const outputFlags: string[] = [
       '-c', 'copy',
       '-f', 'flv',
       '-flvflags', 'no_duration_filesize',
+    ];
+    if (buf > 0) {
+      const usec = Math.round(buf * 1000000);
+      outputFlags.push(
+        '-max_muxing_queue_size', '1024',
+        '-max_interleave_delta', String(usec),
+      );
+    }
+
+    const args = [
+      ...inputFlags,
+      '-i', this.ingestUrl,
+      ...outputFlags,
       targetUrl,
     ];
 

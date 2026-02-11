@@ -20,6 +20,7 @@ vi.mock('../config', () => ({
   getSettings: vi.fn(() => ({
     rtmpPort: 1935,
     ffmpegPath: '',
+    bufferDuration: 0,
     autoReconnect: true,
     maxRetries: 5,
     minimizeToTray: true,
@@ -168,6 +169,108 @@ describe('FFmpegManager', () => {
           health: 'connecting',
         }),
       );
+    });
+  });
+
+  describe('buffer duration flags', () => {
+    const destination: Destination = {
+      id: 'dest-1',
+      platform: 'twitch',
+      name: 'Twitch',
+      url: 'rtmp://live.twitch.tv/app/',
+      enabled: true,
+      createdAt: 1000,
+    };
+
+    it('does not inject buffer flags when bufferDuration is 0', async () => {
+      vi.mocked(getSettings).mockReturnValue({
+        rtmpPort: 1935,
+        ffmpegPath: '',
+        bufferDuration: 0,
+        autoReconnect: true,
+        maxRetries: 5,
+        minimizeToTray: true,
+        startMinimized: false,
+        theme: 'dark',
+      });
+
+      await manager.startDestination(destination);
+
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args).not.toContain('-fflags');
+      expect(args).not.toContain('-analyzeduration');
+      expect(args).not.toContain('-probesize');
+      expect(args).not.toContain('-max_muxing_queue_size');
+      expect(args).not.toContain('-max_interleave_delta');
+    });
+
+    it('injects input-side buffer flags when bufferDuration > 0', async () => {
+      vi.mocked(getSettings).mockReturnValue({
+        rtmpPort: 1935,
+        ffmpegPath: '',
+        bufferDuration: 2,
+        autoReconnect: true,
+        maxRetries: 5,
+        minimizeToTray: true,
+        startMinimized: false,
+        theme: 'dark',
+      });
+
+      await manager.startDestination(destination);
+
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args).toContain('-fflags');
+      expect(args).toContain('+genpts+discardcorrupt');
+      expect(args).toContain('-analyzeduration');
+      expect(args).toContain('2000000');
+      expect(args).toContain('-probesize');
+    });
+
+    it('injects output-side buffer flags when bufferDuration > 0', async () => {
+      vi.mocked(getSettings).mockReturnValue({
+        rtmpPort: 1935,
+        ffmpegPath: '',
+        bufferDuration: 1.5,
+        autoReconnect: true,
+        maxRetries: 5,
+        minimizeToTray: true,
+        startMinimized: false,
+        theme: 'dark',
+      });
+
+      await manager.startDestination(destination);
+
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args).toContain('-max_muxing_queue_size');
+      expect(args).toContain('1024');
+      expect(args).toContain('-max_interleave_delta');
+      expect(args).toContain('1500000');
+    });
+
+    it('places buffer input flags before -i and output flags after -c copy', async () => {
+      vi.mocked(getSettings).mockReturnValue({
+        rtmpPort: 1935,
+        ffmpegPath: '',
+        bufferDuration: 2,
+        autoReconnect: true,
+        maxRetries: 5,
+        minimizeToTray: true,
+        startMinimized: false,
+        theme: 'dark',
+      });
+
+      await manager.startDestination(destination);
+
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      const iIndex = args.indexOf('-i');
+      const fflagsIndex = args.indexOf('-fflags');
+      const maxMuxIndex = args.indexOf('-max_muxing_queue_size');
+      const cIndex = args.indexOf('-c');
+
+      // Input flags before -i
+      expect(fflagsIndex).toBeLessThan(iIndex);
+      // Output flags after -c copy
+      expect(maxMuxIndex).toBeGreaterThan(cIndex);
     });
   });
 
@@ -339,10 +442,12 @@ describe('FFmpegManager', () => {
       vi.mocked(getSettings).mockReturnValue({
         rtmpPort: 1935,
         ffmpegPath: '',
+        bufferDuration: 0,
         autoReconnect: true,
         maxRetries: 0,
         minimizeToTray: true,
         startMinimized: false,
+        theme: 'dark',
       });
 
       const destination: Destination = {
@@ -385,10 +490,12 @@ describe('FFmpegManager', () => {
       vi.mocked(getSettings).mockReturnValue({
         rtmpPort: 1935,
         ffmpegPath: '',
+        bufferDuration: 0,
         autoReconnect: false,
         maxRetries: 5,
         minimizeToTray: true,
         startMinimized: false,
+        theme: 'dark',
       });
 
       const destination: Destination = {

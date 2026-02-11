@@ -7,10 +7,9 @@ interface Props {
   ingestConnected: boolean;
   destinationCount: number;
   onSettingsClick: () => void;
-  onAbout: () => void;
 }
 
-export default function Sidebar({ isLive, ingestConnected, destinationCount, onSettingsClick, onAbout }: Props) {
+export default function Sidebar({ isLive, ingestConnected, destinationCount, onSettingsClick }: Props) {
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -84,22 +83,8 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, onS
         )}
       </div>
 
-      {/* About & Theme & Settings */}
+      {/* Theme & Settings */}
       <div className="pb-3 flex flex-col items-center gap-1">
-        <Tooltip content="About FreEstream" position="right">
-          <button
-            onClick={onAbout}
-            className="no-drag p-2.5 rounded-xl transition-all duration-200"
-            style={{ background: 'transparent', color: 'var(--color-text-muted)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-sidebar-hover)'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-text-muted)'; }}
-          >
-            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-4m0-4h.01" />
-            </svg>
-          </button>
-        </Tooltip>
         <Tooltip content={isDark ? 'Switch to light mode' : 'Switch to dark mode'} position="right">
           <button
             onClick={toggleTheme}
@@ -136,7 +121,7 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, onS
 
         {/* Credit + version */}
         <div className="mt-2 flex flex-col items-center gap-0.5">
-          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.0.0</span>
+          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.2.0</span>
           <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>@l33tdawg</span>
         </div>
       </div>

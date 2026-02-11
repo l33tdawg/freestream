@@ -118,6 +118,7 @@ export const PLATFORM_PRESETS: Record<string, PlatformPreset> = {
 export const DEFAULT_SETTINGS: AppSettings = {
   rtmpPort: 1935,
   ffmpegPath: '',
+  bufferDuration: 0,
   autoReconnect: true,
   maxRetries: 5,
   minimizeToTray: true,

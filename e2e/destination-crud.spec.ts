@@ -1,11 +1,12 @@
 import { test, expect, type ElectronApplication, type Page } from '@playwright/test';
-import { launchApp, closeApp } from './helpers/launch';
+import { launchApp, closeApp, clearDestinations } from './helpers/launch';
 
 let app: ElectronApplication;
 let page: Page;
 
 test.beforeAll(async () => {
   ({ app, page } = await launchApp());
+  await clearDestinations(page);
 });
 
 test.afterAll(async () => {
@@ -42,7 +43,7 @@ test('can remove the destination — empty state returns', async () => {
   page.on('dialog', (dialog) => dialog.accept());
 
   // Click the remove button — identified by the trash icon SVG path (d starts with "M14.74")
-  const removeBtn = page.locator('button:has(path[d^="M14.74"])');
+  const removeBtn = page.locator('button:has(path[d^="M14.74"])').first();
   await removeBtn.click();
 
   // Wait for empty state to reappear
