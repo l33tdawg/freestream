@@ -100,7 +100,7 @@ export const PLATFORM_PRESETS: Record<string, PlatformPreset> = {
   mixcloud: {
     id: 'mixcloud',
     name: 'Mixcloud',
-    defaultUrl: 'rtmp://rtmp.mixcloud.com/broadcast',
+    defaultUrl: 'rtmp://rtmp.mixcloud.com/broadcast/',
     requiresRtmps: false,
     color: '#5000FF',
     icon: '🎧',
@@ -130,17 +130,19 @@ export interface PlatformEncodingPreset {
   bitrate: number;       // kbps
   resolution: '1080p' | '720p' | '480p';
   fps: number;
+  rateControl: 'cbr' | 'vbr';
+  keyframeInterval: number;  // seconds
 }
 
 export const PLATFORM_ENCODING_PRESETS: Partial<Record<PlatformId, PlatformEncodingPreset>> = {
-  twitch:    { bitrate: 6000, resolution: '1080p', fps: 60 },
-  youtube:   { bitrate: 6000, resolution: '1080p', fps: 60 },
-  facebook:  { bitrate: 4000, resolution: '1080p', fps: 30 },
-  tiktok:    { bitrate: 4000, resolution: '1080p', fps: 30 },
-  instagram: { bitrate: 3500, resolution: '720p',  fps: 30 },
-  kick:      { bitrate: 6000, resolution: '1080p', fps: 60 },
-  x:         { bitrate: 4000, resolution: '1080p', fps: 30 },
-  linkedin:  { bitrate: 4000, resolution: '720p',  fps: 30 },
+  twitch:    { bitrate: 6000, resolution: '1080p', fps: 60, rateControl: 'cbr', keyframeInterval: 2 },
+  youtube:   { bitrate: 6000, resolution: '1080p', fps: 60, rateControl: 'cbr', keyframeInterval: 2 },
+  facebook:  { bitrate: 4000, resolution: '1080p', fps: 30, rateControl: 'cbr', keyframeInterval: 2 },
+  tiktok:    { bitrate: 4000, resolution: '1080p', fps: 30, rateControl: 'cbr', keyframeInterval: 2 },
+  instagram: { bitrate: 3500, resolution: '720p',  fps: 30, rateControl: 'cbr', keyframeInterval: 2 },
+  kick:      { bitrate: 8000, resolution: '1080p', fps: 60, rateControl: 'cbr', keyframeInterval: 2 },
+  x:         { bitrate: 4000, resolution: '1080p', fps: 30, rateControl: 'cbr', keyframeInterval: 2 },
+  linkedin:  { bitrate: 4000, resolution: '720p',  fps: 30, rateControl: 'cbr', keyframeInterval: 2 },
 };
 
 export const RESOLUTION_MAP: Record<string, string> = {

@@ -83,6 +83,8 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
       resolution: preset.resolution,
       fps: preset.fps,
       x264Preset: bestEncoder === 'libx264' ? 'veryfast' : undefined,
+      rateControl: preset.rateControl || 'cbr',
+      keyframeInterval: preset.keyframeInterval || 2,
     });
   };
 
@@ -206,6 +208,8 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
                       resolution: preset?.resolution || '1080p',
                       fps: preset?.fps || 30,
                       x264Preset: bestEncoder === 'libx264' ? 'veryfast' : undefined,
+                      rateControl: preset?.rateControl || 'cbr',
+                      keyframeInterval: preset?.keyframeInterval || 2,
                     });
                   }
                 }}
@@ -269,6 +273,32 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
                     min={500}
                     max={50000}
                   />
+                </div>
+
+                {/* Rate Control & Keyframe Interval row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Rate Control</label>
+                    <select
+                      value={encoding.rateControl || 'cbr'}
+                      onChange={(e) => setEncoding({ ...encoding, rateControl: e.target.value as 'cbr' | 'vbr' })}
+                      className="input-field text-[13px]"
+                    >
+                      <option value="cbr">CBR (Constant)</option>
+                      <option value="vbr">VBR (Variable)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Keyframe Interval (s)</label>
+                    <input
+                      type="number"
+                      value={encoding.keyframeInterval ?? 2}
+                      onChange={(e) => setEncoding({ ...encoding, keyframeInterval: parseInt(e.target.value, 10) || 2 })}
+                      className="input-field text-[13px] tabular-nums"
+                      min={1}
+                      max={10}
+                    />
+                  </div>
                 </div>
 
                 {/* Resolution & FPS row */}

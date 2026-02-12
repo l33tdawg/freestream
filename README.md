@@ -24,11 +24,12 @@ OBS / Streamlabs ──RTMP──▶ FreEstream (localhost:1935) ──FFmpeg─
 - **Multi-platform streaming** — Twitch, YouTube, Facebook, TikTok, Instagram, Kick, X, Rumble, LinkedIn, Trovo, Bilibili, Soop, Mixcloud, and custom RTMP
 - **No cloud middleman** — streams go directly from your machine to each platform
 - **Secure key storage** — stream keys are stored in your OS keychain (macOS Keychain / Windows Credential Vault / Linux Secret Service), never in plain text
-- **Per-destination encoding** — re-encode streams per destination with configurable bitrate, resolution, frame rate, and encoder selection
+- **Per-destination encoding** — re-encode streams per destination with configurable bitrate, resolution, frame rate, rate control (CBR/VBR), keyframe interval, and encoder selection
 - **Hardware-accelerated encoding** — auto-detects VideoToolbox (macOS), NVENC (NVIDIA), Quick Sync (Intel), and AMF (AMD) encoders
 - **Smart mismatch warnings** — detects when your source settings exceed a platform's recommendations and offers one-click re-encoding
 - **Platform encoding presets** — recommended settings for each platform with a single click to apply
-- **Per-destination controls** — start, stop, and monitor each destination independently
+- **Live destination management** — toggle destinations on/off while streaming, edit settings mid-stream with automatic restart
+- **Encoding badges** — destination cards show resolution and bitrate badges at a glance for re-encoded streams
 - **Real-time health monitoring** — bitrate, FPS, uptime, dropped frames, and CPU usage per destination
 - **Auto-reconnect** — configurable retry logic if a destination drops
 - **Cross-platform** — macOS (DMG), Windows (NSIS installer), Linux (AppImage)
@@ -49,10 +50,10 @@ Grab the latest release for your platform. macOS builds are code-signed and nota
 
 | Platform | Download |
 |----------|----------|
-| macOS (Apple Silicon) | [FreEstream-1.3.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.3.0/FreEstream-1.3.0-arm64.dmg) |
-| macOS (Intel) | [FreEstream-1.3.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.3.0/FreEstream-1.3.0.dmg) |
-| Windows (x64) | [FreEstream Setup 1.3.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.3.0/FreEstream.Setup.1.3.0.exe) |
-| Linux (x64) | [FreEstream-1.3.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.3.0/FreEstream-1.3.0.AppImage) |
+| macOS (Apple Silicon) | [FreEstream-1.4.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.4.0/FreEstream-1.4.0-arm64.dmg) |
+| macOS (Intel) | [FreEstream-1.4.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.4.0/FreEstream-1.4.0.dmg) |
+| Windows (x64) | [FreEstream Setup 1.4.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.4.0/FreEstream.Setup.1.4.0.exe) |
+| Linux (x64) | [FreEstream-1.4.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.4.0/FreEstream-1.4.0.AppImage) |
 
 Or browse all releases on the [Releases](https://github.com/l33tdawg/freestream/releases) page.
 

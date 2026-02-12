@@ -6,6 +6,12 @@ import { RESOLUTION_MAP } from './constants';
 import { detectFfmpeg, detectEncoders } from './ffmpeg-detector';
 import { getStreamKey } from './secrets';
 
+/** Ensure URL and stream key are joined with a `/` separator */
+function buildStreamUrl(url: string, key: string): string {
+  const trimmedUrl = url.endsWith('/') ? url : url + '/';
+  return trimmedUrl + key;
+}
+
 interface FFmpegInstance {
   process: ChildProcess;
   destination: Destination;
@@ -13,6 +19,7 @@ interface FFmpegInstance {
   retryCount: number;
   retryTimer?: NodeJS.Timeout;
   startTime?: number;
+  stopping?: boolean;
 }
 
 export class FFmpegManager extends EventEmitter {
@@ -47,7 +54,7 @@ export class FFmpegManager extends EventEmitter {
 
   /** Test a stream key by attempting a short FFmpeg connection */
   async testConnection(url: string, streamKey: string): Promise<{ success: boolean; error?: string }> {
-    const fullUrl = url + streamKey;
+    const fullUrl = buildStreamUrl(url, streamKey);
 
     return new Promise((resolve) => {
       const args = [
@@ -99,19 +106,23 @@ export class FFmpegManager extends EventEmitter {
 
         if (gotFrames || code === 0) {
           resolve({ success: true });
-        } else if (stderr.includes('Authorization') || stderr.includes('auth') ||
-                   stderr.includes('Unauthorized') || stderr.includes('403') ||
-                   stderr.includes('NetStream.Publish.BadName') ||
+        } else if (stderr.includes('Authorization') || stderr.includes('Unauthorized') ||
+                   stderr.includes('403') || stderr.includes('NetStream.Publish.BadName') ||
                    stderr.includes('Authentication')) {
           resolve({ success: false, error: 'Authentication failed — check your stream key' });
         } else if (stderr.includes('Connection refused') || stderr.includes('Connection timed out') ||
                    stderr.includes('No route to host') || stderr.includes('getaddrinfo')) {
           resolve({ success: false, error: 'Could not reach server — check the RTMP URL' });
+        } else if (stderr.includes('Input/output error')) {
+          resolve({ success: false, error: 'Connection rejected — check that your stream key is correct' });
         } else {
-          // Extract last meaningful error line from FFmpeg
+          // Extract the most specific error line from FFmpeg (skip generic summary lines)
           const lines = stderr.split('\n').filter(l => l.trim());
-          const lastLine = lines[lines.length - 1] || `FFmpeg exited with code ${code}`;
-          resolve({ success: false, error: lastLine.substring(0, 200) });
+          const specificLine = lines.find(l =>
+            l.includes('Server error') || l.includes('NetStream') || l.includes('RTMP_')
+          );
+          const fallback = lines[lines.length - 1] || `FFmpeg exited with code ${code}`;
+          resolve({ success: false, error: (specificLine || fallback).substring(0, 200) });
         }
       });
 
@@ -140,7 +151,7 @@ export class FFmpegManager extends EventEmitter {
       return;
     }
 
-    const fullUrl = destination.url + streamKey;
+    const fullUrl = buildStreamUrl(destination.url, streamKey);
     this.spawnFFmpeg(destination, fullUrl, 0);
   }
 
@@ -219,6 +230,7 @@ export class FFmpegManager extends EventEmitter {
           fps: stats.fps,
           uptime: instance.startTime ? Math.floor((Date.now() - instance.startTime) / 1000) : 0,
           retryCount: instance.retryCount,
+          cpuPercent: instance.status.cpuPercent,
         };
         this.emitStatus(destination.id, instance.status);
       }
@@ -230,7 +242,7 @@ export class FFmpegManager extends EventEmitter {
       if (!this.running) return;
 
       const inst = this.instances.get(destination.id);
-      if (!inst) return;
+      if (!inst || inst.stopping) return;
 
       const settings = getSettings();
       if (settings.autoReconnect && inst.retryCount < settings.maxRetries) {
@@ -247,7 +259,7 @@ export class FFmpegManager extends EventEmitter {
         inst.retryTimer = setTimeout(async () => {
           const key = await getStreamKey(destination.id);
           if (key && this.running) {
-            this.spawnFFmpeg(destination, destination.url + key, inst.retryCount + 1);
+            this.spawnFFmpeg(destination, buildStreamUrl(destination.url, key), inst.retryCount + 1);
           }
         }, delay);
       } else {
@@ -275,8 +287,17 @@ export class FFmpegManager extends EventEmitter {
     const instance = this.instances.get(id);
     if (!instance) return;
 
+    instance.stopping = true;
+
     if (instance.retryTimer) {
       clearTimeout(instance.retryTimer);
+    }
+
+    // Process may already be dead (e.g. in retry delay)
+    if (instance.process.exitCode !== null || instance.process.killed) {
+      this.instances.delete(id);
+      this.emitStatus(id, { id, health: 'idle' });
+      return;
     }
 
     instance.process.kill('SIGTERM');
@@ -366,10 +387,16 @@ export class FFmpegManager extends EventEmitter {
 
     const args: string[] = ['-c:v', enc.encoder];
 
-    // Bitrate
+    // Bitrate + rate control
     if (enc.bitrate) {
       const br = `${enc.bitrate}k`;
-      args.push('-b:v', br, '-maxrate', br, '-bufsize', `${enc.bitrate * 2}k`);
+      const mode = enc.rateControl || 'cbr';
+      if (mode === 'vbr') {
+        args.push('-b:v', br, '-maxrate', `${Math.round(enc.bitrate * 1.5)}k`, '-bufsize', `${enc.bitrate * 2}k`);
+      } else {
+        // CBR: strict — bufsize = bitrate
+        args.push('-b:v', br, '-maxrate', br, '-bufsize', `${enc.bitrate}k`);
+      }
     }
 
     // libx264-specific flags
@@ -388,6 +415,17 @@ export class FFmpegManager extends EventEmitter {
     // Frame rate
     if (enc.fps && enc.fps !== 'source') {
       args.push('-r', String(enc.fps));
+    }
+
+    // Keyframe interval
+    if (enc.keyframeInterval && enc.keyframeInterval > 0) {
+      if (enc.fps && enc.fps !== 'source') {
+        // Explicit FPS: use -g (frames between keyframes)
+        args.push('-g', String(Number(enc.fps) * enc.keyframeInterval));
+      } else {
+        // Source/unknown FPS: use time-based expression
+        args.push('-force_key_frames', `expr:gte(t,n_forced*${enc.keyframeInterval})`);
+      }
     }
 
     // Audio always passthrough

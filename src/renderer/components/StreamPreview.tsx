@@ -79,15 +79,22 @@ export default function StreamPreview({ previewUrl }: Props) {
 
     // Set up Web Audio API for audio level metering
     const videoEl = videoRef.current;
-    const setupAudio = () => {
+    let audioSetupDone = false;
+    const setupAudio = async () => {
+      if (audioSetupDone) return;
+      audioSetupDone = true;
       try {
         const audioCtx = new AudioContext();
         audioCtxRef.current = audioCtx;
 
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+
         const source = audioCtx.createMediaElementSource(videoEl);
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.8;
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.3;
 
         const gain = audioCtx.createGain();
         gain.gain.value = muted ? 0 : volume / 100;
@@ -99,12 +106,8 @@ export default function StreamPreview({ previewUrl }: Props) {
 
         analyserRef.current = analyser;
 
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-
         // Start audio level animation loop (~20fps to reduce CPU)
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const dataArray = new Uint8Array(analyser.fftSize);
         let lastUpdate = 0;
         const METER_INTERVAL = 50; // ms (~20fps)
         const updateLevels = (timestamp: number) => {
@@ -112,16 +115,17 @@ export default function StreamPreview({ previewUrl }: Props) {
 
           if (timestamp - lastUpdate >= METER_INTERVAL) {
             lastUpdate = timestamp;
-            analyserRef.current.getByteFrequencyData(dataArray);
+            // Use time-domain data (waveform) — more reliable for level metering
+            analyserRef.current.getByteTimeDomainData(dataArray);
 
-            // Calculate RMS level
+            // Calculate RMS from waveform (128 = silence, 0/255 = full amplitude)
             let sum = 0;
             for (let i = 0; i < dataArray.length; i++) {
-              const val = dataArray[i] / 255;
+              const val = (dataArray[i] - 128) / 128;
               sum += val * val;
             }
             const rms = Math.sqrt(sum / dataArray.length);
-            const level = Math.min(1, rms * 2.5); // boost for visibility
+            const level = Math.min(1, rms * 4); // boost for visibility
 
             setAudioLevel(level);
 
@@ -137,12 +141,15 @@ export default function StreamPreview({ previewUrl }: Props) {
           animFrameRef.current = requestAnimationFrame(updateLevels);
         };
         animFrameRef.current = requestAnimationFrame(updateLevels);
-      } catch {
-        // Audio analysis is optional - preview still works without it
+      } catch (e) {
+        console.warn('Audio metering setup failed:', e);
       }
     };
 
-    // Set up audio after video starts playing
+    // Set up audio after video starts playing, or immediately if already playing
+    if (!videoEl.paused) {
+      setupAudio();
+    }
     videoEl.addEventListener('playing', setupAudio, { once: true });
 
     return () => {

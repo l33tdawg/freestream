@@ -133,14 +133,24 @@ export default function DestinationCard({ destination, preset, status, ingest, e
             </span>
           )}
           {hasEncoding && (
-            <span
-              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0"
-              style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }}
-            >
-              {destination.encoding!.resolution && destination.encoding!.resolution !== 'source'
-                ? destination.encoding!.resolution
-                : 'Re-encode'}
-            </span>
+            <>
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0"
+                style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }}
+              >
+                {destination.encoding!.resolution && destination.encoding!.resolution !== 'source'
+                  ? destination.encoding!.resolution
+                  : 'Re-encode'}
+              </span>
+              {destination.encoding!.bitrate && (
+                <span
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0"
+                  style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }}
+                >
+                  {destination.encoding!.bitrate}k
+                </span>
+              )}
+            </>
           )}
           {mismatch && (
             <Tooltip content={mismatch.details} position="top">

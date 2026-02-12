@@ -23,6 +23,8 @@ export interface EncodingSettings {
   resolution?: '1080p' | '720p' | '480p' | 'source';
   fps?: number | 'source';
   x264Preset?: X264Preset;
+  rateControl?: 'cbr' | 'vbr';
+  keyframeInterval?: number;  // seconds (e.g. 2)
 }
 
 export interface AvailableEncoders {

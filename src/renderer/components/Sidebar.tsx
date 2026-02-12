@@ -121,7 +121,7 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, onS
 
         {/* Credit + version */}
         <div className="mt-2 flex flex-col items-center gap-0.5">
-          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.3.0</span>
+          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.4.0</span>
           <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>@l33tdawg</span>
         </div>
       </div>

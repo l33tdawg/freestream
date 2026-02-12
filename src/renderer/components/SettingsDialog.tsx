@@ -358,7 +358,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
                   color: '#e94560',
                 }}
               >
-                v1.3.0
+                v1.4.0
               </span>
 
               <p className="mt-4 text-[14px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>

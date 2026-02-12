@@ -35,6 +35,11 @@ export function registerIpcHandlers(
     if (streamKey !== undefined && streamKey !== null) {
       await setStreamKey(id, streamKey);
     }
+    // Restart FFmpeg if currently live so new settings take effect
+    if (dest && ffmpegManager.isRunning() && dest.enabled) {
+      await ffmpegManager.stopDestination(id);
+      await ffmpegManager.startDestination(dest);
+    }
     return dest;
   });
 
@@ -45,8 +50,17 @@ export function registerIpcHandlers(
     return destinationManager.remove(id);
   });
 
-  ipcMain.handle(IPC.TOGGLE_DESTINATION, (_event, id: string) => {
-    return destinationManager.toggle(id);
+  ipcMain.handle(IPC.TOGGLE_DESTINATION, async (_event, id: string) => {
+    const dest = destinationManager.toggle(id);
+    // Stop or start FFmpeg process if currently live
+    if (dest && ffmpegManager.isRunning()) {
+      if (!dest.enabled) {
+        await ffmpegManager.stopDestination(id);
+      } else {
+        await ffmpegManager.startDestination(dest);
+      }
+    }
+    return dest;
   });
 
   // --- Secrets ---
