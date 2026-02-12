@@ -44,6 +44,8 @@ const mockFreestream = {
 
   // FFmpeg
   detectFfmpeg: vi.fn(),
+  detectEncoders: vi.fn().mockResolvedValue({ hardware: [], software: ['libx264'] }),
+  getEncodingPresets: vi.fn().mockResolvedValue({}),
 
   // App
   getIngestUrl: vi.fn(),

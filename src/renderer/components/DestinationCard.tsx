@@ -1,17 +1,26 @@
 import React from 'react';
-import { Destination, DestinationStatus, PlatformPreset } from '../../shared/types';
+import { Destination, DestinationStatus, IngestStatus, PlatformPreset } from '../../shared/types';
 import HealthIndicator from './HealthIndicator';
 import PlatformIcon from './PlatformIcon';
 import Tooltip from './Tooltip';
 import { useTheme } from '../hooks/useTheme';
 
+interface EncodingPreset {
+  bitrate: number;
+  resolution: string;
+  fps: number;
+}
+
 interface Props {
   destination: Destination;
   preset?: PlatformPreset;
   status?: DestinationStatus;
+  ingest?: IngestStatus;
+  encodingPreset?: EncodingPreset;
   onToggle: () => void;
   onEdit: () => void;
   onRemove: () => void;
+  onAutoEncode?: () => void;
 }
 
 function formatBitrate(kbps: number): string {
@@ -28,11 +37,62 @@ function formatUptime(seconds: number): string {
   return `${s}s`;
 }
 
-export default function DestinationCard({ destination, preset, status, onToggle, onEdit, onRemove }: Props) {
+function parseResolutionHeight(res: string): number {
+  // "1920x1080" → 1080, "1280x720" → 720
+  const match = res.match(/(\d+)x(\d+)/);
+  return match ? parseInt(match[2], 10) : 0;
+}
+
+function resolutionLabel(height: number): string {
+  if (height >= 1080) return '1080p';
+  if (height >= 720) return '720p';
+  if (height >= 480) return '480p';
+  return `${height}p`;
+}
+
+function presetResolutionHeight(res: string): number {
+  const map: Record<string, number> = { '1080p': 1080, '720p': 720, '480p': 480 };
+  return map[res] || 0;
+}
+
+interface Mismatch {
+  label: string;    // e.g. "1080p60 → 720p30"
+  details: string;  // tooltip text
+}
+
+function detectMismatch(ingest: IngestStatus, preset: EncodingPreset, hasEncoding: boolean): Mismatch | null {
+  if (!ingest.connected || hasEncoding) return null;
+
+  const sourceHeight = ingest.resolution ? parseResolutionHeight(ingest.resolution) : 0;
+  const sourceFps = ingest.fps || 0;
+  const targetHeight = presetResolutionHeight(preset.resolution);
+  const targetFps = preset.fps;
+
+  const resMismatch = sourceHeight > 0 && targetHeight > 0 && sourceHeight > targetHeight;
+  const fpsMismatch = sourceFps > 0 && targetFps > 0 && sourceFps > targetFps;
+
+  if (!resMismatch && !fpsMismatch) return null;
+
+  const srcLabel = `${sourceHeight > 0 ? resolutionLabel(sourceHeight) : '?'}${sourceFps > 0 ? sourceFps : ''}`;
+  const tgtLabel = `${preset.resolution}${targetFps}`;
+
+  const parts: string[] = [];
+  if (resMismatch) parts.push(`resolution (${resolutionLabel(sourceHeight)} → ${preset.resolution})`);
+  if (fpsMismatch) parts.push(`frame rate (${sourceFps}fps → ${targetFps}fps)`);
+
+  return {
+    label: `${srcLabel} → ${tgtLabel}`,
+    details: `Source ${parts.join(' and ')} exceeds platform recommendation. Consider enabling re-encoding.`,
+  };
+}
+
+export default function DestinationCard({ destination, preset, status, ingest, encodingPreset, onToggle, onEdit, onRemove, onAutoEncode }: Props) {
   const { isDark } = useTheme();
   const health = status?.health || 'idle';
   const platformColor = preset?.color || '#6B7280';
   const isLive = health === 'live';
+  const hasEncoding = !!destination.encoding && destination.encoding.encoder !== 'copy';
+  const mismatch = ingest && encodingPreset ? detectMismatch(ingest, encodingPreset, hasEncoding) : null;
 
   return (
     <div
@@ -64,6 +124,48 @@ export default function DestinationCard({ destination, preset, status, onToggle,
         <div className="flex items-center gap-2">
           <h4 className="text-[14px] font-medium truncate" style={{ color: 'var(--color-text-secondary)' }}>{destination.name}</h4>
           <HealthIndicator health={health} size="sm" showLabel={health !== 'idle'} />
+          {status?.retryCount != null && status.retryCount > 0 && (
+            <span
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0"
+              style={{ background: 'rgba(251, 146, 60, 0.15)', color: '#fb923c' }}
+            >
+              Retry {status.retryCount}
+            </span>
+          )}
+          {hasEncoding && (
+            <span
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0"
+              style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa' }}
+            >
+              {destination.encoding!.resolution && destination.encoding!.resolution !== 'source'
+                ? destination.encoding!.resolution
+                : 'Re-encode'}
+            </span>
+          )}
+          {mismatch && (
+            <Tooltip content={mismatch.details} position="top">
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-md flex-shrink-0 flex items-center gap-1 cursor-default"
+                style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                </svg>
+                {mismatch.label}
+                {onAutoEncode && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onAutoEncode(); }}
+                    className="ml-1 px-1.5 py-px rounded text-[10px] font-semibold transition-colors"
+                    style={{ background: 'rgba(245, 158, 11, 0.25)', color: '#fbbf24' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(245, 158, 11, 0.4)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)')}
+                  >
+                    Fix
+                  </button>
+                )}
+              </span>
+            </Tooltip>
+          )}
         </div>
         <div className="flex items-center gap-2.5 mt-1">
           {status?.bitrate != null && status.bitrate > 0 ? (
@@ -81,6 +183,17 @@ export default function DestinationCard({ destination, preset, status, onToggle,
                   <span className="text-[11px] font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatUptime(status.uptime)}</span>
                 </>
               )}
+              {status?.cpuPercent != null && status.cpuPercent > 0 && (
+                <>
+                  <span style={{ color: 'var(--color-text-faint)' }}>|</span>
+                  <span
+                    className="text-[11px] font-mono tabular-nums"
+                    style={{ color: status.cpuPercent > 80 ? '#f87171' : status.cpuPercent > 50 ? '#eab308' : 'var(--color-text-muted)' }}
+                  >
+                    CPU {status.cpuPercent}%
+                  </span>
+                </>
+              )}
             </>
           ) : (
             <span className="text-[11px] truncate" style={{ color: 'var(--color-text-muted)' }}>{destination.url || 'No URL configured'}</span>
@@ -88,9 +201,6 @@ export default function DestinationCard({ destination, preset, status, onToggle,
         </div>
         {status?.error && (
           <p className="text-[11px] text-red-400/80 mt-1 truncate">{status.error}</p>
-        )}
-        {status?.retryCount != null && status.retryCount > 0 && (
-          <p className="text-[11px] text-orange-400/70 mt-0.5">Retry {status.retryCount}</p>
         )}
       </div>
 

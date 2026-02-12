@@ -24,6 +24,7 @@ export function useStreamStatus() {
           map.set(ds.id, ds);
         }
         return {
+          ...prev,
           ingest: status.ingest,
           destinationStatuses: map,
           isLive: status.isLive,

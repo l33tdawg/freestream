@@ -8,6 +8,7 @@ import { PLATFORM_PRESETS } from './constants';
 import { getSettings, updateSettings } from './config';
 import { setStreamKey, getStreamKey, deleteStreamKey } from './secrets';
 import { detectFfmpeg } from './ffmpeg-detector';
+import { PLATFORM_ENCODING_PRESETS } from './constants';
 
 export function registerIpcHandlers(
   mainWindow: BrowserWindow,
@@ -116,6 +117,14 @@ export function registerIpcHandlers(
   ipcMain.handle(IPC.DETECT_FFMPEG, async () => {
     const settings = getSettings();
     return detectFfmpeg(settings.ffmpegPath);
+  });
+
+  ipcMain.handle(IPC.DETECT_ENCODERS, () => {
+    return ffmpegManager.getAvailableEncoders();
+  });
+
+  ipcMain.handle(IPC.GET_ENCODING_PRESETS, () => {
+    return PLATFORM_ENCODING_PRESETS;
   });
 
   // --- App ---

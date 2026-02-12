@@ -30,6 +30,7 @@ vi.mock('../config', () => ({
 
 vi.mock('../ffmpeg-detector', () => ({
   detectFfmpeg: vi.fn().mockResolvedValue('/usr/bin/ffmpeg'),
+  detectEncoders: vi.fn().mockResolvedValue({ hardware: ['h264_videotoolbox'], software: ['libx264'] }),
 }));
 
 vi.mock('../secrets', () => ({
@@ -103,6 +104,127 @@ describe('FFmpegManager', () => {
     });
   });
 
+  describe('buildOutputArgs', () => {
+    const baseDest: Destination = {
+      id: 'dest-1',
+      platform: 'twitch',
+      name: 'Twitch',
+      url: 'rtmp://live.twitch.tv/app/',
+      enabled: true,
+      createdAt: 1000,
+    };
+
+    it('returns passthrough when no encoding settings', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const args = buildOutputArgs(baseDest);
+      expect(args).toEqual(['-c', 'copy']);
+    });
+
+    it('returns passthrough when encoder is copy', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = { ...baseDest, encoding: { encoder: 'copy' as const } };
+      const args = buildOutputArgs(dest);
+      expect(args).toEqual(['-c', 'copy']);
+    });
+
+    it('builds HW encoder args without preset flags', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = {
+        ...baseDest,
+        encoding: {
+          encoder: 'h264_videotoolbox' as const,
+          bitrate: 4000,
+          resolution: '720p' as const,
+          fps: 30,
+        },
+      };
+      const args = buildOutputArgs(dest);
+
+      expect(args).toContain('-c:v');
+      expect(args).toContain('h264_videotoolbox');
+      expect(args).toContain('-b:v');
+      expect(args).toContain('4000k');
+      expect(args).toContain('-vf');
+      expect(args).toContain('scale=1280:720');
+      expect(args).toContain('-r');
+      expect(args).toContain('30');
+      expect(args).toContain('-c:a');
+      expect(args).toContain('copy');
+      // No preset or tune flags for HW encoder
+      expect(args).not.toContain('-preset');
+      expect(args).not.toContain('-tune');
+    });
+
+    it('builds libx264 args with preset and tune', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = {
+        ...baseDest,
+        encoding: {
+          encoder: 'libx264' as const,
+          bitrate: 3500,
+          resolution: '720p' as const,
+          fps: 30,
+          x264Preset: 'veryfast' as const,
+        },
+      };
+      const args = buildOutputArgs(dest);
+
+      expect(args).toContain('-c:v');
+      expect(args).toContain('libx264');
+      expect(args).toContain('-preset');
+      expect(args).toContain('veryfast');
+      expect(args).toContain('-tune');
+      expect(args).toContain('zerolatency');
+      expect(args).toContain('-b:v');
+      expect(args).toContain('3500k');
+      expect(args).toContain('-vf');
+      expect(args).toContain('scale=1280:720');
+      expect(args).toContain('-r');
+      expect(args).toContain('30');
+    });
+
+    it('audio always copies', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = {
+        ...baseDest,
+        encoding: {
+          encoder: 'h264_nvenc' as const,
+          bitrate: 6000,
+        },
+      };
+      const args = buildOutputArgs(dest);
+      const caIdx = args.indexOf('-c:a');
+      expect(caIdx).toBeGreaterThan(-1);
+      expect(args[caIdx + 1]).toBe('copy');
+    });
+
+    it('skips resolution filter when set to source', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = {
+        ...baseDest,
+        encoding: {
+          encoder: 'h264_videotoolbox' as const,
+          resolution: 'source' as const,
+        },
+      };
+      const args = buildOutputArgs(dest);
+      expect(args).not.toContain('-vf');
+    });
+
+    it('skips fps when set to source', () => {
+      const buildOutputArgs = (manager as any).buildOutputArgs.bind(manager);
+      const dest = {
+        ...baseDest,
+        encoding: {
+          encoder: 'h264_videotoolbox' as const,
+          fps: 'source' as const,
+        },
+      };
+      const args = buildOutputArgs(dest);
+      expect(args).not.toContain('-r');
+    });
+  });
+
   describe('initialize', () => {
     it('detects ffmpeg path', async () => {
       const result = await manager.initialize();
@@ -155,6 +277,27 @@ describe('FFmpegManager', () => {
           error: 'No stream key configured',
         }),
       );
+    });
+
+    it('spawns ffmpeg with encoding args when encoding is set', async () => {
+      const encodedDest: Destination = {
+        ...destination,
+        encoding: {
+          encoder: 'h264_videotoolbox',
+          bitrate: 3500,
+          resolution: '720p',
+          fps: 30,
+        },
+      };
+
+      await manager.startDestination(encodedDest);
+
+      const args = vi.mocked(spawn).mock.calls[0][1] as string[];
+      expect(args).toContain('-c:v');
+      expect(args).toContain('h264_videotoolbox');
+      expect(args).toContain('-b:v');
+      expect(args).toContain('3500k');
+      expect(args).not.toContain('-c');  // should not have plain '-c copy'
     });
 
     it('emits connecting status when process starts', async () => {

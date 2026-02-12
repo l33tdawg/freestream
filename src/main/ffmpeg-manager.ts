@@ -1,8 +1,9 @@
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, exec, spawn } from 'child_process';
 import { EventEmitter } from 'events';
-import { Destination, DestinationStatus, StreamStats } from '../shared/types';
+import { AvailableEncoders, Destination, DestinationStatus, EncodingSettings, StreamStats } from '../shared/types';
 import { getSettings } from './config';
-import { detectFfmpeg } from './ffmpeg-detector';
+import { RESOLUTION_MAP } from './constants';
+import { detectFfmpeg, detectEncoders } from './ffmpeg-detector';
 import { getStreamKey } from './secrets';
 
 interface FFmpegInstance {
@@ -19,6 +20,7 @@ export class FFmpegManager extends EventEmitter {
   private ffmpegPath: string = 'ffmpeg';
   private ingestUrl: string = '';
   private running: boolean = false;
+  private availableEncoders: AvailableEncoders = { hardware: [], software: ['libx264'] };
 
   constructor() {
     super();
@@ -33,8 +35,14 @@ export class FFmpegManager extends EventEmitter {
     const detected = await detectFfmpeg(settings.ffmpegPath);
     if (detected) {
       this.ffmpegPath = detected;
+      this.availableEncoders = await detectEncoders(detected);
+      console.log('[FFmpeg] Available HW encoders:', this.availableEncoders.hardware.join(', ') || 'none');
     }
     return detected;
+  }
+
+  getAvailableEncoders(): AvailableEncoders {
+    return this.availableEncoders;
   }
 
   /** Test a stream key by attempting a short FFmpeg connection */
@@ -150,8 +158,10 @@ export class FFmpegManager extends EventEmitter {
       );
     }
 
+    const encodingArgs = this.buildOutputArgs(destination);
+
     const outputFlags: string[] = [
-      '-c', 'copy',
+      ...encodingArgs,
       '-f', 'flv',
       '-flvflags', 'no_duration_filesize',
     ];
@@ -310,6 +320,80 @@ export class FFmpegManager extends EventEmitter {
 
   isRunning(): boolean {
     return this.running;
+  }
+
+  async pollCpuUsage(): Promise<void> {
+    const pids: { id: string; pid: number }[] = [];
+    for (const [id, inst] of this.instances) {
+      if (inst.process.pid) {
+        pids.push({ id, pid: inst.process.pid });
+      }
+    }
+    if (pids.length === 0) return;
+
+    try {
+      const pidList = pids.map((p) => p.pid).join(',');
+      const output = await new Promise<string>((resolve, reject) => {
+        exec(`ps -p ${pidList} -o pid=,%cpu=`, (err, stdout) => {
+          if (err) reject(err);
+          else resolve(stdout);
+        });
+      });
+      for (const line of output.trim().split('\n')) {
+        const match = line.trim().match(/^(\d+)\s+([\d.]+)/);
+        if (match) {
+          const pid = parseInt(match[1], 10);
+          const cpu = parseFloat(match[2]);
+          const entry = pids.find((p) => p.pid === pid);
+          if (entry) {
+            const inst = this.instances.get(entry.id);
+            if (inst) {
+              inst.status.cpuPercent = Math.round(cpu);
+            }
+          }
+        }
+      }
+    } catch {
+      // ps not available (Windows) — leave cpuPercent undefined
+    }
+  }
+
+  private buildOutputArgs(destination: Destination): string[] {
+    const enc = destination.encoding;
+    if (!enc || enc.encoder === 'copy') {
+      return ['-c', 'copy'];
+    }
+
+    const args: string[] = ['-c:v', enc.encoder];
+
+    // Bitrate
+    if (enc.bitrate) {
+      const br = `${enc.bitrate}k`;
+      args.push('-b:v', br, '-maxrate', br, '-bufsize', `${enc.bitrate * 2}k`);
+    }
+
+    // libx264-specific flags
+    if (enc.encoder === 'libx264') {
+      args.push('-preset', enc.x264Preset || 'veryfast', '-tune', 'zerolatency');
+    }
+
+    // Resolution scale filter
+    if (enc.resolution && enc.resolution !== 'source') {
+      const dims = RESOLUTION_MAP[enc.resolution];
+      if (dims) {
+        args.push('-vf', `scale=${dims}`);
+      }
+    }
+
+    // Frame rate
+    if (enc.fps && enc.fps !== 'source') {
+      args.push('-r', String(enc.fps));
+    }
+
+    // Audio always passthrough
+    args.push('-c:a', 'copy');
+
+    return args;
   }
 
   private parseStats(line: string): StreamStats | null {

@@ -43,8 +43,11 @@ export class StreamMonitor extends EventEmitter {
 
   startPolling(intervalMs: number = 2000): void {
     this.stopPolling();
-    this.pollInterval = setInterval(() => {
-      // Re-emit all current statuses for UI refresh
+    this.pollInterval = setInterval(async () => {
+      // Poll per-process CPU usage for all FFmpeg instances
+      await this.ffmpegManager.pollCpuUsage();
+
+      // Re-emit all current statuses (now includes cpuPercent)
       const statuses = this.ffmpegManager.getAllStatuses();
       for (const status of statuses) {
         this.emit('destinationStatusChanged', status);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppSettings } from '../../shared/types';
+import { AppSettings, Destination } from '../../shared/types';
 
 type Tab = 'ingest' | 'streaming' | 'general' | 'about';
 
@@ -26,6 +26,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
   const [networkUrl, setNetworkUrl] = useState('');
   const [streamKey, setStreamKey] = useState('');
   const [copiedField, setCopiedField] = useState<'url' | 'key' | 'network' | null>(null);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [encodingPresets, setEncodingPresets] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (open) {
@@ -36,6 +38,8 @@ export default function SettingsDialog({ open, onClose }: Props) {
       window.freestream.getIngestUrl().then(setIngestUrl);
       window.freestream.getNetworkIngestUrl().then(setNetworkUrl);
       window.freestream.getIngestStreamKey().then(setStreamKey);
+      window.freestream.getDestinations().then(setDestinations).catch(() => {});
+      window.freestream.getEncodingPresets().then(setEncodingPresets).catch(() => {});
     }
   }, [open]);
 
@@ -198,6 +202,59 @@ export default function SettingsDialog({ open, onClose }: Props) {
           {/* Streaming Tab */}
           {activeTab === 'streaming' && (
             <div className="space-y-5">
+              {/* Recommended Source Settings */}
+              {(() => {
+                const enabled = destinations.filter((d) => d.enabled);
+                if (enabled.length === 0) return null;
+
+                const withPresets = enabled.filter((d) => encodingPresets[d.platform]);
+                if (withPresets.length === 0) return null;
+
+                // Find highest common denominator for all enabled destinations
+                let maxBitrate = 0;
+                let maxRes = '720p';
+                let maxFps = 30;
+                const resRank: Record<string, number> = { '480p': 0, '720p': 1, '1080p': 2 };
+
+                for (const d of withPresets) {
+                  const p = encodingPresets[d.platform];
+                  if (p.bitrate > maxBitrate) maxBitrate = p.bitrate;
+                  if ((resRank[p.resolution] || 0) > (resRank[maxRes] || 0)) maxRes = p.resolution;
+                  if (p.fps > maxFps) maxFps = p.fps;
+                }
+
+                // Count how many destinations are compatible with these settings
+                const compatible = withPresets.filter((d) => {
+                  const p = encodingPresets[d.platform];
+                  return p.bitrate >= maxBitrate && (resRank[p.resolution] || 0) >= (resRank[maxRes] || 0) && p.fps >= maxFps;
+                });
+
+                const needsReencode = withPresets.filter((d) => {
+                  const p = encodingPresets[d.platform];
+                  return p.bitrate < maxBitrate || (resRank[p.resolution] || 0) < (resRank[maxRes] || 0) || p.fps < maxFps;
+                });
+
+                return (
+                  <div
+                    className="rounded-xl px-4 py-3"
+                    style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.15)' }}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: '#60a5fa' }}>
+                      Recommended Source Settings
+                    </p>
+                    <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                      {maxRes} at {maxFps} fps, {maxBitrate.toLocaleString()} kbps
+                    </p>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                      Compatible with {compatible.length} of {withPresets.length} destination{withPresets.length !== 1 ? 's' : ''} via passthrough.
+                      {needsReencode.length > 0 && (
+                        <> {needsReencode.map((d) => d.name).join(', ')} will need re-encoding.</>
+                      )}
+                    </p>
+                  </div>
+                );
+              })()}
+
               {/* FFmpeg */}
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>FFmpeg Path</label>
@@ -301,7 +358,7 @@ export default function SettingsDialog({ open, onClose }: Props) {
                   color: '#e94560',
                 }}
               >
-                v1.2.0
+                v1.3.0
               </span>
 
               <p className="mt-4 text-[14px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>

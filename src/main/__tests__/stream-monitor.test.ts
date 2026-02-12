@@ -6,7 +6,7 @@ import { StreamMonitor } from '../stream-monitor';
 
 describe('StreamMonitor', () => {
   let mockNms: EventEmitter & { ingestStatus: IngestStatus };
-  let mockFfmpegManager: EventEmitter & { getAllStatuses: () => DestinationStatus[] };
+  let mockFfmpegManager: EventEmitter & { getAllStatuses: () => DestinationStatus[]; pollCpuUsage: () => Promise<void> };
   let monitor: StreamMonitor;
 
   beforeEach(() => {
@@ -22,6 +22,7 @@ describe('StreamMonitor', () => {
     const ffmpegEmitter = new EventEmitter();
     mockFfmpegManager = Object.assign(ffmpegEmitter, {
       getAllStatuses: vi.fn().mockReturnValue([]),
+      pollCpuUsage: vi.fn().mockResolvedValue(undefined),
     });
 
     monitor = new StreamMonitor(mockNms as any, mockFfmpegManager as any);
@@ -97,7 +98,7 @@ describe('StreamMonitor', () => {
   });
 
   describe('startPolling', () => {
-    it('re-emits destination statuses at the given interval', () => {
+    it('re-emits destination statuses at the given interval', async () => {
       const statuses: DestinationStatus[] = [
         { id: 'dest-1', health: 'live', bitrate: 2500 },
       ];
@@ -108,17 +109,17 @@ describe('StreamMonitor', () => {
 
       monitor.startPolling(1000);
 
-      // Advance past one interval
-      vi.advanceTimersByTime(1000);
+      // Advance past one interval and flush async
+      await vi.advanceTimersByTimeAsync(1000);
       expect(handler).toHaveBeenCalledWith(statuses[0]);
 
       // Advance past another interval
       handler.mockClear();
-      vi.advanceTimersByTime(1000);
+      await vi.advanceTimersByTimeAsync(1000);
       expect(handler).toHaveBeenCalledWith(statuses[0]);
     });
 
-    it('uses default interval of 2000ms', () => {
+    it('uses default interval of 2000ms', async () => {
       const statuses: DestinationStatus[] = [
         { id: 'dest-1', health: 'live' },
       ];
@@ -130,15 +131,15 @@ describe('StreamMonitor', () => {
       monitor.startPolling();
 
       // Not yet at 2000ms
-      vi.advanceTimersByTime(1999);
+      await vi.advanceTimersByTimeAsync(1999);
       expect(handler).not.toHaveBeenCalled();
 
       // At 2000ms
-      vi.advanceTimersByTime(1);
+      await vi.advanceTimersByTimeAsync(1);
       expect(handler).toHaveBeenCalled();
     });
 
-    it('clears previous polling interval when called again', () => {
+    it('clears previous polling interval when called again', async () => {
       const handler = vi.fn();
       monitor.on('destinationStatusChanged', handler);
 
@@ -149,16 +150,16 @@ describe('StreamMonitor', () => {
       monitor.startPolling(5000);
 
       // Only the 5000ms interval should be active
-      vi.advanceTimersByTime(1000);
+      await vi.advanceTimersByTimeAsync(1000);
       expect(handler).not.toHaveBeenCalled();
 
-      vi.advanceTimersByTime(4000);
+      await vi.advanceTimersByTimeAsync(4000);
       expect(handler).toHaveBeenCalled();
     });
   });
 
   describe('stopPolling', () => {
-    it('stops emitting destination statuses', () => {
+    it('stops emitting destination statuses', async () => {
       const statuses: DestinationStatus[] = [
         { id: 'dest-1', health: 'live' },
       ];
@@ -168,13 +169,13 @@ describe('StreamMonitor', () => {
       monitor.on('destinationStatusChanged', handler);
 
       monitor.startPolling(1000);
-      vi.advanceTimersByTime(1000);
+      await vi.advanceTimersByTimeAsync(1000);
       expect(handler).toHaveBeenCalledTimes(1);
 
       monitor.stopPolling();
       handler.mockClear();
 
-      vi.advanceTimersByTime(5000);
+      await vi.advanceTimersByTimeAsync(5000);
       expect(handler).not.toHaveBeenCalled();
     });
 

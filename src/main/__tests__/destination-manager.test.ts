@@ -214,6 +214,53 @@ describe('DestinationManager', () => {
       manager.update('dest-1', { enabled: false });
       expect(setDestinations).toHaveBeenCalled();
     });
+
+    it('updates encoding settings', () => {
+      mockDestinations.push({
+        id: 'dest-1',
+        platform: 'instagram',
+        name: 'Instagram',
+        url: 'rtmps://live-upload.instagram.com:443/rtmp/',
+        enabled: true,
+        createdAt: 1000,
+      });
+
+      const result = manager.update('dest-1', {
+        encoding: {
+          encoder: 'h264_videotoolbox',
+          bitrate: 3500,
+          resolution: '720p',
+          fps: 30,
+        },
+      });
+
+      expect(result).not.toBeNull();
+      expect(result!.encoding).toBeDefined();
+      expect(result!.encoding!.encoder).toBe('h264_videotoolbox');
+      expect(result!.encoding!.resolution).toBe('720p');
+      expect(setDestinations).toHaveBeenCalled();
+    });
+
+    it('clears encoding settings when set to undefined', () => {
+      mockDestinations.push({
+        id: 'dest-1',
+        platform: 'instagram',
+        name: 'Instagram',
+        url: 'rtmps://live-upload.instagram.com:443/rtmp/',
+        enabled: true,
+        createdAt: 1000,
+        encoding: {
+          encoder: 'h264_videotoolbox',
+          bitrate: 3500,
+          resolution: '720p',
+          fps: 30,
+        },
+      });
+
+      const result = manager.update('dest-1', { encoding: undefined });
+      expect(result).not.toBeNull();
+      expect(result!.encoding).toBeUndefined();
+    });
   });
 
   describe('remove', () => {

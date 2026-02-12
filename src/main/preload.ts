@@ -18,7 +18,9 @@ const IPC = {
   GET_SETTINGS: 'settings:get',
   UPDATE_SETTINGS: 'settings:update',
   DETECT_FFMPEG: 'ffmpeg:detect',
+  DETECT_ENCODERS: 'ffmpeg:detect-encoders',
   GET_INGEST_URL: 'app:get-ingest-url',
+  GET_ENCODING_PRESETS: 'app:get-encoding-presets',
 } as const;
 
 const api = {
@@ -49,6 +51,8 @@ const api = {
 
   // FFmpeg
   detectFfmpeg: () => ipcRenderer.invoke(IPC.DETECT_FFMPEG),
+  detectEncoders: () => ipcRenderer.invoke(IPC.DETECT_ENCODERS),
+  getEncodingPresets: () => ipcRenderer.invoke(IPC.GET_ENCODING_PRESETS),
 
   // App
   getIngestUrl: () => ipcRenderer.invoke(IPC.GET_INGEST_URL),

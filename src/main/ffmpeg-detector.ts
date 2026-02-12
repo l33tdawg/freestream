@@ -1,6 +1,7 @@
 import { execFile } from 'child_process';
 import { existsSync } from 'fs';
 import path from 'path';
+import { AvailableEncoders, VideoEncoder } from '../shared/types';
 
 const COMMON_PATHS = [
   '/usr/local/bin/ffmpeg',
@@ -42,4 +43,29 @@ function tryFfmpegCommand(cmd: string): Promise<boolean> {
       resolve(!error && stdout.includes('ffmpeg version'));
     });
   });
+}
+
+const HW_ENCODERS: VideoEncoder[] = ['h264_videotoolbox', 'h264_nvenc', 'h264_qsv', 'h264_amf'];
+
+export async function detectEncoders(ffmpegPath: string): Promise<AvailableEncoders> {
+  const result: AvailableEncoders = { hardware: [], software: ['libx264'] };
+
+  try {
+    const output = await new Promise<string>((resolve, reject) => {
+      execFile(ffmpegPath, ['-encoders'], { timeout: 5000 }, (error, stdout) => {
+        if (error) reject(error);
+        else resolve(stdout);
+      });
+    });
+
+    for (const encoder of HW_ENCODERS) {
+      if (output.includes(encoder)) {
+        result.hardware.push(encoder);
+      }
+    }
+  } catch {
+    // FFmpeg not available or errored — return software-only
+  }
+
+  return result;
 }

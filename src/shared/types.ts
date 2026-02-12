@@ -14,6 +14,22 @@ export type PlatformId =
   | 'mixcloud'
   | 'custom';
 
+export type VideoEncoder = 'copy' | 'libx264' | 'h264_videotoolbox' | 'h264_nvenc' | 'h264_qsv' | 'h264_amf';
+export type X264Preset = 'ultrafast' | 'veryfast' | 'medium';
+
+export interface EncodingSettings {
+  encoder: VideoEncoder;
+  bitrate?: number;       // kbps
+  resolution?: '1080p' | '720p' | '480p' | 'source';
+  fps?: number | 'source';
+  x264Preset?: X264Preset;
+}
+
+export interface AvailableEncoders {
+  hardware: VideoEncoder[];
+  software: VideoEncoder[];
+}
+
 export interface PlatformPreset {
   id: PlatformId;
   name: string;
@@ -30,6 +46,7 @@ export interface Destination {
   url: string;
   enabled: boolean;
   createdAt: number;
+  encoding?: EncodingSettings;
 }
 
 export type DestinationHealth = 'idle' | 'connecting' | 'live' | 'error' | 'retrying';
@@ -43,6 +60,7 @@ export interface DestinationStatus {
   droppedFrames?: number;
   error?: string;
   retryCount?: number;
+  cpuPercent?: number; // per-FFmpeg-process CPU usage
 }
 
 export interface IngestStatus {
@@ -110,8 +128,10 @@ export const IPC = {
 
   // FFmpeg
   DETECT_FFMPEG: 'ffmpeg:detect',
+  DETECT_ENCODERS: 'ffmpeg:detect-encoders',
 
   // App
   GET_INGEST_URL: 'app:get-ingest-url',
+  GET_ENCODING_PRESETS: 'app:get-encoding-presets',
 
 } as const;

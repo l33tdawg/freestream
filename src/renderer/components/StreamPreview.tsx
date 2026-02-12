@@ -18,8 +18,14 @@ export default function StreamPreview({ previewUrl }: Props) {
   const [peakLevel, setPeakLevel] = useState(0);
   const peakDecayRef = useRef(0);
   const [error, setError] = useState<string | null>(null);
-  const [volume, setVolume] = useState(75);
-  const [muted, setMuted] = useState(true);
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('freestream-preview-volume');
+    return saved !== null ? parseInt(saved, 10) : 75;
+  });
+  const [muted, setMuted] = useState(() => {
+    const saved = localStorage.getItem('freestream-preview-muted');
+    return saved !== null ? saved === 'true' : true;
+  });
 
   const cleanup = useCallback(() => {
     cancelAnimationFrame(animFrameRef.current);
@@ -57,8 +63,9 @@ export default function StreamPreview({ previewUrl }: Props) {
     }, {
       enableWorker: false,
       liveBufferLatencyChasing: true,
-      liveBufferLatencyMaxLatency: 1.5,
-      liveBufferLatencyMinRemain: 0.3,
+      liveBufferLatencyMaxLatency: 0.6,
+      liveBufferLatencyMinRemain: 0.15,
+      liveBufferLatencyChasingOnPaused: true,
     });
 
     player.attachMediaElement(videoRef.current);
@@ -96,34 +103,40 @@ export default function StreamPreview({ previewUrl }: Props) {
           audioCtx.resume();
         }
 
-        // Start audio level animation loop
+        // Start audio level animation loop (~20fps to reduce CPU)
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        const updateLevels = () => {
+        let lastUpdate = 0;
+        const METER_INTERVAL = 50; // ms (~20fps)
+        const updateLevels = (timestamp: number) => {
           if (!analyserRef.current) return;
-          analyserRef.current.getByteFrequencyData(dataArray);
 
-          // Calculate RMS level
-          let sum = 0;
-          for (let i = 0; i < dataArray.length; i++) {
-            const val = dataArray[i] / 255;
-            sum += val * val;
+          if (timestamp - lastUpdate >= METER_INTERVAL) {
+            lastUpdate = timestamp;
+            analyserRef.current.getByteFrequencyData(dataArray);
+
+            // Calculate RMS level
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              const val = dataArray[i] / 255;
+              sum += val * val;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+            const level = Math.min(1, rms * 2.5); // boost for visibility
+
+            setAudioLevel(level);
+
+            // Peak hold with decay
+            if (level > peakDecayRef.current) {
+              peakDecayRef.current = level;
+            } else {
+              peakDecayRef.current = Math.max(0, peakDecayRef.current - 0.02);
+            }
+            setPeakLevel(peakDecayRef.current);
           }
-          const rms = Math.sqrt(sum / dataArray.length);
-          const level = Math.min(1, rms * 2.5); // boost for visibility
-
-          setAudioLevel(level);
-
-          // Peak hold with decay
-          if (level > peakDecayRef.current) {
-            peakDecayRef.current = level;
-          } else {
-            peakDecayRef.current = Math.max(0, peakDecayRef.current - 0.01);
-          }
-          setPeakLevel(peakDecayRef.current);
 
           animFrameRef.current = requestAnimationFrame(updateLevels);
         };
-        updateLevels();
+        animFrameRef.current = requestAnimationFrame(updateLevels);
       } catch {
         // Audio analysis is optional - preview still works without it
       }
@@ -146,16 +159,21 @@ export default function StreamPreview({ previewUrl }: Props) {
   }, [volume, muted]);
 
   const handleToggleMute = () => {
-    setMuted(!muted);
+    const next = !muted;
+    setMuted(next);
+    localStorage.setItem('freestream-preview-muted', String(next));
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = parseInt(e.target.value, 10);
     setVolume(val);
+    localStorage.setItem('freestream-preview-volume', String(val));
     if (val > 0 && muted) {
       setMuted(false);
+      localStorage.setItem('freestream-preview-muted', 'false');
     } else if (val === 0 && !muted) {
       setMuted(true);
+      localStorage.setItem('freestream-preview-muted', 'true');
     }
   };
 

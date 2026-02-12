@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Destination, DestinationStatus, IngestStatus as IngestStatusType, PlatformPreset } from '../../shared/types';
+import { AvailableEncoders, Destination, DestinationStatus, EncodingSettings, IngestStatus as IngestStatusType, PlatformPreset, VideoEncoder } from '../../shared/types';
 import DestinationCard from './DestinationCard';
 import AddDestinationDialog from './AddDestinationDialog';
 import EditDestinationDialog from './EditDestinationDialog';
@@ -31,11 +31,15 @@ export default function Dashboard({ ingest, isLive, destinationStatuses, destina
   const { isDark } = useTheme();
   const { destinations: dests, add, update, remove, toggle } = destinations;
   const [presets, setPresets] = useState<Record<string, PlatformPreset>>({});
+  const [encodingPresets, setEncodingPresets] = useState<Record<string, { bitrate: number; resolution: string; fps: number }>>({});
+  const [availableEncoders, setAvailableEncoders] = useState<AvailableEncoders>({ hardware: [], software: ['libx264'] });
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingDest, setEditingDest] = useState<Destination | null>(null);
 
   useEffect(() => {
     window.freestream.getPlatformPresets().then(setPresets);
+    window.freestream.getEncodingPresets().then(setEncodingPresets).catch(() => {});
+    window.freestream.detectEncoders().then(setAvailableEncoders).catch(() => {});
   }, []);
 
   const handleGoLive = async () => {
@@ -55,6 +59,19 @@ export default function Dashboard({ ingest, isLive, destinationStatuses, destina
     if (confirm('Remove this destination?')) {
       await remove(id);
     }
+  };
+
+  const handleAutoEncode = async (dest: Destination) => {
+    const preset = encodingPresets[dest.platform];
+    const bestEncoder: VideoEncoder = availableEncoders.hardware[0] || 'libx264';
+    const encoding: EncodingSettings = {
+      encoder: bestEncoder,
+      bitrate: preset?.bitrate || 4000,
+      resolution: (preset?.resolution as EncodingSettings['resolution']) || '1080p',
+      fps: preset?.fps || 30,
+      x264Preset: bestEncoder === 'libx264' ? 'veryfast' : undefined,
+    };
+    await update(dest.id, { encoding });
   };
 
   const enabledCount = dests.filter((d) => d.enabled).length;
@@ -164,9 +181,12 @@ export default function Dashboard({ ingest, isLive, destinationStatuses, destina
                   destination={dest}
                   preset={presets[dest.platform]}
                   status={destinationStatuses.get(dest.id)}
+                  ingest={ingest}
+                  encodingPreset={encodingPresets[dest.platform]}
                   onToggle={() => toggle(dest.id)}
                   onEdit={() => setEditingDest(dest)}
                   onRemove={() => handleRemove(dest.id)}
+                  onAutoEncode={() => handleAutoEncode(dest)}
                 />
               ))}
             </div>

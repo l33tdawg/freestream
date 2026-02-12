@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Destination } from '../../shared/types';
+import { AvailableEncoders, Destination, EncodingSettings, VideoEncoder } from '../../shared/types';
 import StreamKeyInput from './StreamKeyInput';
 import PlatformIcon from './PlatformIcon';
 import { useTheme } from '../hooks/useTheme';
@@ -19,6 +19,10 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
   const [loadedKey, setLoadedKey] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; error?: string } | null>(null);
+  const [encodingEnabled, setEncodingEnabled] = useState(false);
+  const [encoding, setEncoding] = useState<EncodingSettings>({ encoder: 'copy' });
+  const [availableEncoders, setAvailableEncoders] = useState<AvailableEncoders>({ hardware: [], software: ['libx264'] });
+  const [platformPresets, setPlatformPresets] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (destination && open) {
@@ -26,11 +30,18 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
       setUrl(destination.url);
       setStreamKey('');
       setLoadedKey(false);
+      setTestResult(null);
+
+      const hasEncoding = !!destination.encoding && destination.encoding.encoder !== 'copy';
+      setEncodingEnabled(hasEncoding);
+      setEncoding(destination.encoding || { encoder: 'copy' });
 
       window.freestream.getStreamKey(destination.id).then((key) => {
         if (key) setStreamKey(key);
         setLoadedKey(true);
       });
+      window.freestream.detectEncoders().then(setAvailableEncoders).catch(() => {});
+      window.freestream.getEncodingPresets().then(setPlatformPresets).catch(() => {});
     }
   }, [destination, open]);
 
@@ -50,9 +61,35 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
 
   if (!open || !destination) return null;
 
+  const encoderLabel = (enc: VideoEncoder): string => {
+    const labels: Record<VideoEncoder, string> = {
+      'copy': 'Passthrough',
+      'libx264': 'x264 (Software)',
+      'h264_videotoolbox': 'VideoToolbox (macOS)',
+      'h264_nvenc': 'NVENC (NVIDIA)',
+      'h264_qsv': 'Quick Sync (Intel)',
+      'h264_amf': 'AMF (AMD)',
+    };
+    return labels[enc] || enc;
+  };
+
+  const applyPlatformPreset = () => {
+    const preset = platformPresets[destination.platform];
+    if (!preset) return;
+    const bestEncoder: VideoEncoder = availableEncoders.hardware[0] || 'libx264';
+    setEncoding({
+      encoder: bestEncoder,
+      bitrate: preset.bitrate,
+      resolution: preset.resolution,
+      fps: preset.fps,
+      x264Preset: bestEncoder === 'libx264' ? 'veryfast' : undefined,
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(destination.id, { name, url }, streamKey || undefined);
+    const encodingSettings = encodingEnabled ? encoding : undefined;
+    onSave(destination.id, { name, url, encoding: encodingSettings }, streamKey || undefined);
     onClose();
   };
 
@@ -144,6 +181,146 @@ export default function EditDestinationDialog({ destination, open, onClose, onSa
               )}
             </div>
           )}
+
+          {/* Encoding Settings */}
+          <div style={{ borderTop: '1px solid var(--color-divider)' }} className="pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--color-text-secondary)' }}>Encoding</p>
+                <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {encodingEnabled ? 'Re-encode stream for this destination' : 'Passthrough — only enable if your source doesn\'t match this platform\'s requirements'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !encodingEnabled;
+                  setEncodingEnabled(next);
+                  if (!next) setEncoding({ encoder: 'copy' });
+                  else if (encoding.encoder === 'copy') {
+                    const bestEncoder = availableEncoders.hardware[0] || 'libx264';
+                    const preset = platformPresets[destination.platform];
+                    setEncoding({
+                      encoder: bestEncoder,
+                      bitrate: preset?.bitrate || 4000,
+                      resolution: preset?.resolution || '1080p',
+                      fps: preset?.fps || 30,
+                      x264Preset: bestEncoder === 'libx264' ? 'veryfast' : undefined,
+                    });
+                  }
+                }}
+                className="toggle-track"
+                style={{ background: encodingEnabled ? '#e94560' : 'var(--color-toggle-off)' }}
+              >
+                <div className="toggle-thumb" style={{ left: encodingEnabled ? '22px' : '3px' }} />
+              </button>
+            </div>
+
+            {encodingEnabled && (
+              <div className="space-y-3 animate-fade-in">
+                {/* Platform preset button */}
+                {platformPresets[destination.platform] && (
+                  <button
+                    type="button"
+                    onClick={applyPlatformPreset}
+                    className="btn-secondary text-[12px] w-full"
+                  >
+                    Use {destination.name} recommended settings
+                  </button>
+                )}
+
+                {/* Encoder */}
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Encoder</label>
+                  <select
+                    value={encoding.encoder}
+                    onChange={(e) => setEncoding({ ...encoding, encoder: e.target.value as VideoEncoder })}
+                    className="input-field text-[13px]"
+                  >
+                    {availableEncoders.hardware.map((enc) => (
+                      <option key={enc} value={enc}>{encoderLabel(enc)}</option>
+                    ))}
+                    <option value="libx264">{encoderLabel('libx264')}</option>
+                  </select>
+                </div>
+
+                {/* Software encoder warning */}
+                {encoding.encoder === 'libx264' && availableEncoders.hardware.length > 0 && (
+                  <div
+                    className="px-3 py-2 rounded-lg text-[12px] flex items-start gap-2"
+                    style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', color: '#f59e0b' }}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                    <span>Software encoding uses significant CPU. Consider using <strong>{encoderLabel(availableEncoders.hardware[0])}</strong> instead.</span>
+                  </div>
+                )}
+
+                {/* Bitrate */}
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Bitrate (kbps)</label>
+                  <input
+                    type="number"
+                    value={encoding.bitrate || ''}
+                    onChange={(e) => setEncoding({ ...encoding, bitrate: parseInt(e.target.value, 10) || undefined })}
+                    className="input-field text-[13px] tabular-nums"
+                    placeholder="e.g. 4000"
+                    min={500}
+                    max={50000}
+                  />
+                </div>
+
+                {/* Resolution & FPS row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Resolution</label>
+                    <select
+                      value={encoding.resolution || 'source'}
+                      onChange={(e) => setEncoding({ ...encoding, resolution: e.target.value as any })}
+                      className="input-field text-[13px]"
+                    >
+                      <option value="source">Source</option>
+                      <option value="1080p">1080p</option>
+                      <option value="720p">720p</option>
+                      <option value="480p">480p</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>Frame Rate</label>
+                    <select
+                      value={encoding.fps || 'source'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEncoding({ ...encoding, fps: val === 'source' ? 'source' : parseInt(val, 10) });
+                      }}
+                      className="input-field text-[13px]"
+                    >
+                      <option value="source">Source</option>
+                      <option value="60">60 fps</option>
+                      <option value="30">30 fps</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* x264 Preset */}
+                {encoding.encoder === 'libx264' && (
+                  <div>
+                    <label className="block text-[11px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-text-muted)' }}>x264 Preset</label>
+                    <select
+                      value={encoding.x264Preset || 'veryfast'}
+                      onChange={(e) => setEncoding({ ...encoding, x264Preset: e.target.value as any })}
+                      className="input-field text-[13px]"
+                    >
+                      <option value="ultrafast">Ultrafast</option>
+                      <option value="veryfast">Veryfast</option>
+                      <option value="medium">Medium</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           <div className="flex justify-end gap-2.5 pt-1">
             <button type="button" onClick={onClose} className="btn-secondary text-[13px]">Cancel</button>

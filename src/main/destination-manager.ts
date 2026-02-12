@@ -35,7 +35,7 @@ export class DestinationManager {
     return destination;
   }
 
-  update(id: string, updates: Partial<Pick<Destination, 'name' | 'url' | 'enabled'>>): Destination | null {
+  update(id: string, updates: Partial<Pick<Destination, 'name' | 'url' | 'enabled' | 'encoding'>>): Destination | null {
     const destinations = getDestinations();
     const index = destinations.findIndex((d) => d.id === id);
     if (index === -1) return null;
