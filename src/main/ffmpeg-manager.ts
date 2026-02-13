@@ -163,9 +163,10 @@ export class FFmpegManager extends EventEmitter {
     if (buf > 0) {
       const usec = Math.round(buf * 1000000);
       inputFlags.push(
-        '-fflags', '+genpts+discardcorrupt',
+        '-fflags', '+genpts',
         '-analyzeduration', String(usec),
         '-probesize', String(usec),
+        '-thread_queue_size', '4096',
       );
     }
 
@@ -177,10 +178,8 @@ export class FFmpegManager extends EventEmitter {
       '-flvflags', 'no_duration_filesize',
     ];
     if (buf > 0) {
-      const usec = Math.round(buf * 1000000);
       outputFlags.push(
-        '-max_muxing_queue_size', '1024',
-        '-max_interleave_delta', String(usec),
+        '-max_muxing_queue_size', '4096',
       );
     }
 
