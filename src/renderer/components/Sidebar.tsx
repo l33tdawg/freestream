@@ -6,10 +6,12 @@ interface Props {
   isLive: boolean;
   ingestConnected: boolean;
   destinationCount: number;
+  consoleOpen: boolean;
+  onConsoleToggle: () => void;
   onSettingsClick: () => void;
 }
 
-export default function Sidebar({ isLive, ingestConnected, destinationCount, onSettingsClick }: Props) {
+export default function Sidebar({ isLive, ingestConnected, destinationCount, consoleOpen, onConsoleToggle, onSettingsClick }: Props) {
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -83,8 +85,34 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, onS
         )}
       </div>
 
-      {/* Theme & Settings */}
+      {/* Console, Theme & Settings */}
       <div className="pb-3 flex flex-col items-center gap-1">
+        <Tooltip content={consoleOpen ? 'Hide console' : 'Show console'} position="right">
+          <button
+            onClick={onConsoleToggle}
+            className="no-drag p-2.5 rounded-xl transition-all duration-200"
+            style={{
+              background: consoleOpen ? 'rgba(233, 69, 96, 0.12)' : 'transparent',
+              color: consoleOpen ? 'var(--color-accent)' : 'var(--color-text-muted)',
+            }}
+            onMouseEnter={(e) => {
+              if (!consoleOpen) {
+                e.currentTarget.style.background = 'var(--color-sidebar-hover)';
+                e.currentTarget.style.color = 'var(--color-text-secondary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!consoleOpen) {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--color-text-muted)';
+              }
+            }}
+          >
+            <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3M5.25 20.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+            </svg>
+          </button>
+        </Tooltip>
         <Tooltip content={isDark ? 'Switch to light mode' : 'Switch to dark mode'} position="right">
           <button
             onClick={toggleTheme}
@@ -121,7 +149,7 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, onS
 
         {/* Credit + version */}
         <div className="mt-2 flex flex-col items-center gap-0.5">
-          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.4.1</span>
+          <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>v1.5.0</span>
           <span className="text-[8px] tracking-wide" style={{ color: 'var(--color-text-faint)' }}>@l33tdawg</span>
         </div>
       </div>

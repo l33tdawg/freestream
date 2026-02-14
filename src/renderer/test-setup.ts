@@ -60,6 +60,7 @@ const mockFreestream = {
   onIngestStatusChanged: vi.fn().mockReturnValue(() => {}),
   onDestinationStatusChanged: vi.fn().mockReturnValue(() => {}),
   onStreamError: vi.fn().mockReturnValue(() => {}),
+  onLogMessage: vi.fn().mockReturnValue(() => {}),
 };
 
 Object.defineProperty(window, 'freestream', {

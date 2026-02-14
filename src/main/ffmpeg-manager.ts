@@ -5,6 +5,7 @@ import { getSettings } from './config';
 import { RESOLUTION_MAP } from './constants';
 import { detectFfmpeg, detectEncoders } from './ffmpeg-detector';
 import { getStreamKey } from './secrets';
+import { log } from './logger';
 
 /** Ensure URL and stream key are joined with a `/` separator */
 function buildStreamUrl(url: string, key: string): string {
@@ -43,7 +44,7 @@ export class FFmpegManager extends EventEmitter {
     if (detected) {
       this.ffmpegPath = detected;
       this.availableEncoders = await detectEncoders(detected);
-      console.log('[FFmpeg] Available HW encoders:', this.availableEncoders.hardware.join(', ') || 'none');
+      log('ffmpeg', 'info', `Available HW encoders: ${this.availableEncoders.hardware.join(', ') || 'none'}`);
     }
     return detected;
   }
@@ -190,7 +191,8 @@ export class FFmpegManager extends EventEmitter {
       targetUrl,
     ];
 
-    console.log(`[FFmpeg] Starting for ${destination.name} (attempt ${retryCount + 1})`);
+    log('ffmpeg', 'info', `Starting for ${destination.name} (attempt ${retryCount + 1})`);
+    log('ffmpeg', 'info', `[${destination.name}] args: ${args.filter(a => !a.includes('rtmp://')).join(' ')}`);
 
     const proc = spawn(this.ffmpegPath, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -232,11 +234,18 @@ export class FFmpegManager extends EventEmitter {
           cpuPercent: instance.status.cpuPercent,
         };
         this.emitStatus(destination.id, instance.status);
+      } else {
+        // Forward non-stats stderr lines to logger
+        const trimmed = line.trim();
+        if (trimmed) {
+          const level = /error/i.test(trimmed) ? 'error' as const : 'info' as const;
+          log('ffmpeg', level, `[${destination.name}] ${trimmed}`);
+        }
       }
     });
 
     proc.on('close', (code) => {
-      console.log(`[FFmpeg] ${destination.name} exited with code ${code}`);
+      log('ffmpeg', code === 0 ? 'info' : 'warn', `${destination.name} exited with code ${code}`);
 
       if (!this.running) return;
 
@@ -246,7 +255,7 @@ export class FFmpegManager extends EventEmitter {
       const settings = getSettings();
       if (settings.autoReconnect && inst.retryCount < settings.maxRetries) {
         const delay = Math.min(2000 * Math.pow(2, inst.retryCount), 60000);
-        console.log(`[FFmpeg] Retrying ${destination.name} in ${delay}ms`);
+        log('ffmpeg', 'warn', `Retrying ${destination.name} in ${delay}ms`);
 
         this.emitStatus(destination.id, {
           id: destination.id,
@@ -273,7 +282,7 @@ export class FFmpegManager extends EventEmitter {
     });
 
     proc.on('error', (err) => {
-      console.error(`[FFmpeg] Process error for ${destination.name}:`, err.message);
+      log('ffmpeg', 'error', `Process error for ${destination.name}: ${err.message}`);
       this.emitStatus(destination.id, {
         id: destination.id,
         health: 'error',

@@ -7,6 +7,7 @@ import { StreamMonitor } from './stream-monitor';
 import { registerIpcHandlers } from './ipc-handlers';
 import { getSettings } from './config';
 import { APP_NAME } from './constants';
+import { setLogWindow, log } from './logger';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -107,9 +108,9 @@ async function initializeServices(): Promise<void> {
   ffmpegManager = new FFmpegManager();
   const ffmpegPath = await ffmpegManager.initialize();
   if (!ffmpegPath) {
-    console.warn('[FreEstream] FFmpeg not found. Fan-out will not work until FFmpeg is installed.');
+    log('app', 'warn', 'FFmpeg not found. Fan-out will not work until FFmpeg is installed.');
   } else {
-    console.log(`[FreEstream] FFmpeg found at: ${ffmpegPath}`);
+    log('app', 'info', `FFmpeg found at: ${ffmpegPath}`);
   }
 
   destinationManager = new DestinationManager();
@@ -120,6 +121,7 @@ app.whenReady().then(async () => {
   await initializeServices();
 
   mainWindow = createWindow();
+  setLogWindow(mainWindow);
 
   registerIpcHandlers(mainWindow, nms, ffmpegManager, destinationManager, streamMonitor);
 
@@ -149,6 +151,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   if (mainWindow === null) {
     mainWindow = createWindow();
+    setLogWindow(mainWindow);
     registerIpcHandlers(mainWindow, nms, ffmpegManager, destinationManager, streamMonitor);
   } else {
     mainWindow.show();

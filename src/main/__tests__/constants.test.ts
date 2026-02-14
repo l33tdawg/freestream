@@ -110,7 +110,7 @@ describe('PLATFORM_PRESETS', () => {
   it('mixcloud has correct defaults', () => {
     expect(PLATFORM_PRESETS.mixcloud.name).toBe('Mixcloud');
     expect(PLATFORM_PRESETS.mixcloud.requiresRtmps).toBe(false);
-    expect(PLATFORM_PRESETS.mixcloud.defaultUrl).toBe('rtmp://rtmp.mixcloud.com/broadcast');
+    expect(PLATFORM_PRESETS.mixcloud.defaultUrl).toBe('rtmp://rtmp.mixcloud.com/broadcast/');
     expect(PLATFORM_PRESETS.mixcloud.color).toMatch(/^#[0-9A-Fa-f]{6}$/);
   });
 

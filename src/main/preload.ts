@@ -21,6 +21,7 @@ const IPC = {
   DETECT_ENCODERS: 'ffmpeg:detect-encoders',
   GET_INGEST_URL: 'app:get-ingest-url',
   GET_ENCODING_PRESETS: 'app:get-encoding-presets',
+  LOG_MESSAGE: 'event:log-message',
 } as const;
 
 const api = {
@@ -74,6 +75,11 @@ const api = {
     const listener = (_event: any, status: any) => callback(status);
     ipcRenderer.on(IPC.DESTINATION_STATUS_CHANGED, listener);
     return () => ipcRenderer.removeListener(IPC.DESTINATION_STATUS_CHANGED, listener);
+  },
+  onLogMessage: (callback: (entry: any) => void) => {
+    const listener = (_event: any, entry: any) => callback(entry);
+    ipcRenderer.on(IPC.LOG_MESSAGE, listener);
+    return () => ipcRenderer.removeListener(IPC.LOG_MESSAGE, listener);
   },
 };
 

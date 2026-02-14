@@ -9,6 +9,8 @@ const mockProc = {
   on: vi.fn(),
   kill: vi.fn(),
   pid: 12345,
+  exitCode: null as number | null,
+  killed: false,
 };
 
 vi.mock('child_process', () => ({
@@ -55,6 +57,8 @@ describe('FFmpegManager', () => {
     mockProc.stdout = new EventEmitter();
     mockProc.on = vi.fn();
     mockProc.kill = vi.fn();
+    mockProc.exitCode = null;
+    mockProc.killed = false;
 
     manager = new FFmpegManager();
     manager.setIngestUrl(ingestUrl);
@@ -363,7 +367,7 @@ describe('FFmpegManager', () => {
 
       const args = vi.mocked(spawn).mock.calls[0][1] as string[];
       expect(args).toContain('-fflags');
-      expect(args).toContain('+genpts+discardcorrupt');
+      expect(args).toContain('+genpts');
       expect(args).toContain('-analyzeduration');
       expect(args).toContain('2000000');
       expect(args).toContain('-probesize');
@@ -385,9 +389,7 @@ describe('FFmpegManager', () => {
 
       const args = vi.mocked(spawn).mock.calls[0][1] as string[];
       expect(args).toContain('-max_muxing_queue_size');
-      expect(args).toContain('1024');
-      expect(args).toContain('-max_interleave_delta');
-      expect(args).toContain('1500000');
+      expect(args).toContain('4096');
     });
 
     it('places buffer input flags before -i and output flags after -c copy', async () => {

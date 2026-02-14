@@ -99,6 +99,18 @@ export interface StreamStats {
   speed: number;
 }
 
+// Log types for in-app console
+export type LogSource = 'ffmpeg' | 'nms' | 'app';
+export type LogLevel = 'info' | 'warn' | 'error';
+
+export interface LogEntry {
+  id: number;
+  timestamp: number;
+  source: LogSource;
+  level: LogLevel;
+  message: string;
+}
+
 // IPC channel names
 export const IPC = {
   // Destinations
@@ -135,5 +147,8 @@ export const IPC = {
   // App
   GET_INGEST_URL: 'app:get-ingest-url',
   GET_ENCODING_PRESETS: 'app:get-encoding-presets',
+
+  // Logs (main → renderer)
+  LOG_MESSAGE: 'event:log-message',
 
 } as const;

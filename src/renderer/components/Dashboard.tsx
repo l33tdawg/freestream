@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { AvailableEncoders, Destination, DestinationStatus, EncodingSettings, IngestStatus as IngestStatusType, PlatformPreset, VideoEncoder } from '../../shared/types';
+import { AvailableEncoders, Destination, DestinationStatus, EncodingSettings, IngestStatus as IngestStatusType, LogEntry, PlatformPreset, VideoEncoder } from '../../shared/types';
 import DestinationCard from './DestinationCard';
 import AddDestinationDialog from './AddDestinationDialog';
 import EditDestinationDialog from './EditDestinationDialog';
 import StreamControls from './StreamControls';
 import BandwidthMeter from './BandwidthMeter';
 import IngestStatus from './IngestStatus';
+import ConsolePanel from './ConsolePanel';
 import Tooltip from './Tooltip';
 import { useTheme } from '../hooks/useTheme';
 
@@ -25,9 +26,13 @@ interface Props {
   destinationStatuses: Map<string, DestinationStatus>;
   destinations: DestinationsHook;
   refreshStatus: () => Promise<void>;
+  consoleOpen: boolean;
+  logs: LogEntry[];
+  onConsoleClear: () => void;
+  onConsoleToggle: () => void;
 }
 
-export default function Dashboard({ ingest, isLive, destinationStatuses, destinations, refreshStatus }: Props) {
+export default function Dashboard({ ingest, isLive, destinationStatuses, destinations, refreshStatus, consoleOpen, logs, onConsoleClear, onConsoleToggle }: Props) {
   const { isDark } = useTheme();
   const { destinations: dests, add, update, remove, toggle } = destinations;
   const [presets, setPresets] = useState<Record<string, PlatformPreset>>({});
@@ -200,6 +205,9 @@ export default function Dashboard({ ingest, isLive, destinationStatuses, destina
           </div>
         </div>
       </div>
+
+      {/* Console panel */}
+      <ConsolePanel open={consoleOpen} logs={logs} onClear={onConsoleClear} onClose={onConsoleToggle} />
 
       {/* Dialogs */}
       <AddDestinationDialog

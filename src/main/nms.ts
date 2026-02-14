@@ -4,6 +4,7 @@ import http from 'http';
 import os from 'os';
 import { IngestStatus } from '../shared/types';
 import { RTMP_APP_NAME, RTMP_STREAM_KEY } from './constants';
+import { log } from './logger';
 // RTMP_APP_NAME/RTMP_STREAM_KEY used as defaults when no stream is connected
 
 export class NMSWrapper extends EventEmitter {
@@ -46,13 +47,13 @@ export class NMSWrapper extends EventEmitter {
     this.nms = new NodeMediaServer(config);
 
     this.nms.on('prePublish', (id: string, streamPath: string, args: any) => {
-      console.log(`[NMS] prePublish: ${streamPath} from session ${id}`);
+      log('nms', 'info', `prePublish: ${streamPath} from session ${id}`);
       let clientIp = 'unknown';
       try {
         const session = this.nms.getSession(id);
         clientIp = session?.ip || 'unknown';
       } catch (err) {
-        console.warn('[NMS] Could not get session info:', err);
+        log('nms', 'warn', `Could not get session info: ${err}`);
       }
       this._currentStreamPath = streamPath;
       this._connectTime = Date.now();
@@ -68,11 +69,11 @@ export class NMSWrapper extends EventEmitter {
     });
 
     this.nms.on('postPublish', (id: string, streamPath: string, args: any) => {
-      console.log(`[NMS] postPublish: ${streamPath}`);
+      log('nms', 'info', `postPublish: ${streamPath}`);
     });
 
     this.nms.on('donePublish', (id: string, streamPath: string, args: any) => {
-      console.log(`[NMS] donePublish: ${streamPath}`);
+      log('nms', 'info', `donePublish: ${streamPath}`);
       this.stopStatsPolling();
       this._currentStreamPath = null;
       this._ingestStatus = { connected: false };
@@ -80,7 +81,7 @@ export class NMSWrapper extends EventEmitter {
     });
 
     this.nms.run();
-    console.log(`[NMS] RTMP server started on port ${this.port}`);
+    log('nms', 'info', `RTMP server started on port ${this.port}`);
   }
 
   stop(): void {
@@ -89,7 +90,7 @@ export class NMSWrapper extends EventEmitter {
       this.nms.stop();
       this.nms = null;
       this._ingestStatus = { connected: false };
-      console.log('[NMS] RTMP server stopped');
+      log('nms', 'info', 'RTMP server stopped');
     }
   }
 
