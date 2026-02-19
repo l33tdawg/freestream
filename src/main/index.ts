@@ -9,6 +9,17 @@ import { getSettings } from './config';
 import { APP_NAME } from './constants';
 import { setLogWindow, log } from './logger';
 
+// macOS GUI apps launched from Finder/Dock have a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin).
+// Ensure common binary locations are on PATH so FFmpeg (and other tools) can be found.
+function fixPath(): void {
+  const extraPaths = ['/usr/local/bin', '/opt/homebrew/bin', '/opt/homebrew/sbin'];
+  const currentPath = process.env.PATH || '';
+  const missing = extraPaths.filter((p) => !currentPath.split(':').includes(p));
+  if (missing.length > 0) {
+    process.env.PATH = [...missing, currentPath].join(':');
+  }
+}
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let nms: NMSWrapper;
@@ -118,6 +129,7 @@ async function initializeServices(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  fixPath();
   await initializeServices();
 
   mainWindow = createWindow();

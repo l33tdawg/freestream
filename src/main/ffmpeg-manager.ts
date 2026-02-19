@@ -55,6 +55,16 @@ export class FFmpegManager extends EventEmitter {
 
   /** Test a stream key by attempting a short FFmpeg connection */
   async testConnection(url: string, streamKey: string): Promise<{ success: boolean; error?: string }> {
+    // Re-detect if ffmpegPath is still the bare default (not yet initialized or detection failed)
+    if (this.ffmpegPath === 'ffmpeg') {
+      const detected = await detectFfmpeg();
+      if (detected) {
+        this.ffmpegPath = detected;
+      } else {
+        return { success: false, error: 'FFmpeg not found. Install FFmpeg or set the path in Settings.' };
+      }
+    }
+
     const fullUrl = buildStreamUrl(url, streamKey);
 
     return new Promise((resolve) => {

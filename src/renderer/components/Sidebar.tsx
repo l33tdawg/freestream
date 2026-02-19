@@ -16,7 +16,7 @@ export default function Sidebar({ isLive, ingestConnected, destinationCount, con
 
   return (
     <div
-      className="w-[68px] flex flex-col items-center py-0 border-r select-none flex-shrink-0"
+      className="w-[80px] flex flex-col items-center py-0 border-r select-none flex-shrink-0"
       style={{
         background: 'var(--color-sidebar-bg)',
         borderColor: 'var(--color-sidebar-border)',
