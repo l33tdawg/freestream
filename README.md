@@ -50,8 +50,8 @@ Grab the latest release for your platform. macOS builds are code-signed and nota
 
 | Platform | Download |
 |----------|----------|
-| macOS (Apple Silicon) | [FreEstream-1.5.0-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.5.0/FreEstream-1.5.0-arm64.dmg) |
-| macOS (Intel) | [FreEstream-1.5.0.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.5.0/FreEstream-1.5.0.dmg) |
+| macOS (Apple Silicon) | [FreEstream-1.5.1-arm64.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.5.1/FreEstream-1.5.1-arm64.dmg) |
+| macOS (Intel) | [FreEstream-1.5.1.dmg](https://github.com/l33tdawg/freestream/releases/download/v1.5.1/FreEstream-1.5.1.dmg) |
 | Windows (x64) | [FreEstream Setup 1.5.0.exe](https://github.com/l33tdawg/freestream/releases/download/v1.5.0/FreEstream.Setup.1.5.0.exe) |
 | Linux (x64) | [FreEstream-1.5.0.AppImage](https://github.com/l33tdawg/freestream/releases/download/v1.5.0/FreEstream-1.5.0.AppImage) |
 
